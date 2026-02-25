@@ -1,0 +1,35 @@
+<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-120">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Recent Orders</h3>
+        <a href="#" class="text-sm text-indigo-600 font-medium hover:underline">View All</a>
+    </div>
+    <div class="space-y-4">
+        @for (order of orders(); track order.id) {
+        <div
+            class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer border border-gray-100">
+            <div class="flex items-center gap-4">
+                <div class="w-15 h-10 bg-indigo-100 rounded-md flex items-center justify-center">
+                    <span class="text-indigo-600 font-bold text-sm">{{ order.id }}</span>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">{{ order.customerName }}</p>
+                    <p class="text-sm text-gray-500">{{ order.items }} items • \${{ order.total }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    [class.bg-yellow-100]="order.status === 'processing'"
+                    [class.text-yellow-800]="order.status === 'processing'"
+                    [class.bg-blue-100]="order.status === 'shipped'" [class.text-blue-800]="order.status === 'shipped'"
+                    [class.bg-green-100]="order.status === 'delivered'"
+                    [class.text-green-800]="order.status === 'delivered'"
+                    [class.bg-purple-100]="order.status === 'pending'"
+                    [class.text-purple-800]="order.status === 'pending'">
+                    {{ order.status | titlecase }}
+                </span>
+                <p class="text-xs text-gray-400 mt-1">{{ order.date | date:'shortTime' }}</p>
+            </div>
+        </div>
+        }
+    </div>
+</div>

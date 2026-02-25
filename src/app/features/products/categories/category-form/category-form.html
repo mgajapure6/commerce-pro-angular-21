@@ -1,0 +1,779 @@
+<div class="min-h-screen bg-gray-50/50 pb-20">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div class="mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Left -->
+                <div class="flex items-center gap-4">
+                    <a routerLink="/products/categories"
+                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="bi bi-arrow-left text-xl"></i>
+                    </a>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">
+                            {{ isEditMode() ? 'Edit Category' : 'Add New Category' }}
+                        </h1>
+                        <p class="text-sm text-gray-500">
+                            {{ isEditMode() ? 'Update category details and settings' : 'Create a new product category'
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right -->
+                <div class="flex items-center gap-3">
+                    <!-- Mobile Menu Toggle -->
+                    <button (click)="showMobileNav.set(!showMobileNav())"
+                        class="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="bi bi-list text-xl"></i>
+                    </button>
+
+                    <!-- Preview Link -->
+                    @if (isEditMode()) {
+                    <a [href]="'/category/' + categorySlug()" target="_blank"
+                        class="hidden sm:flex px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all items-center gap-2">
+                        <i class="bi bi-eye"></i>
+                        Preview
+                    </a>
+                    }
+
+                    <!-- Save Dropdown -->
+                    <div class="relative">
+                        <button (click)="showSaveOptions.set(!showSaveOptions())"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200">
+                            @if (isSaving()) {
+                            <i class="bi bi-arrow-repeat spin"></i>
+                            <span>Saving...</span>
+                            } @else {
+                            <i class="bi bi-check-lg"></i>
+                            <span>Save</span>
+                            <i class="bi bi-chevron-down text-xs"></i>
+                            }
+                        </button>
+
+                        @if (showSaveOptions() && !isSaving()) {
+                        <div
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 animate-dropdown">
+                            <button (click)="saveCategory('draft')"
+                                class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-xl flex items-center gap-2">
+                                <i class="bi bi-save text-gray-500"></i>
+                                Save as Draft
+                            </button>
+                            <button (click)="saveCategory('publish')"
+                                class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                <i class="bi bi-check-circle text-green-600"></i>
+                                Save & Publish
+                            </button>
+                            <button (click)="saveCategory('continue')"
+                                class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 last:rounded-b-xl flex items-center gap-2">
+                                <i class="bi bi-arrow-right text-indigo-600"></i>
+                                Save & Continue
+                            </button>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        @if (showMobileNav()) {
+        <div class="lg:hidden border-t border-gray-200 bg-white px-4 py-3 space-y-2">
+            @for (section of formSections(); track section.id) {
+            <button (click)="scrollToSection(section.id); showMobileNav.set(false)"
+                class="w-full px-4 py-2 text-left text-sm font-medium rounded-lg transition-colors"
+                [class.bg-indigo-50]="activeSection() === section.id"
+                [class.text-indigo-600]="activeSection() === section.id"
+                [class.text-gray-700]="activeSection() !== section.id">
+                <i class="bi mr-2" [class]="section.icon"></i>
+                {{ section.label }}
+            </button>
+            }
+        </div>
+        }
+    </header>
+
+    <!-- Main Content -->
+    <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Sidebar Navigation (Desktop) -->
+            <div class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-24 space-y-6">
+                    <!-- Progress -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">Completion</h3>
+                        <div class="relative pt-1">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-semibold inline-block text-indigo-600">
+                                        {{ completionPercentage() }}% Complete
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-100">
+                                <div [style.width.%]="completionPercentage()"
+                                    class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            @for (item of completionItems(); track item.field) {
+                            <div class="flex items-center gap-2 text-sm">
+                                <i class="bi" [class.bi-check-circle-fill]="item.complete"
+                                    [class.bi-circle]="!item.complete" [class.text-green-500]="item.complete"
+                                    [class.text-gray-300]="!item.complete">
+                                </i>
+                                <span [class.text-gray-900]="item.complete" [class.text-gray-400]="!item.complete">
+                                    {{ item.label }}
+                                </span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Quick Navigation -->
+                    <nav class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100">
+                            <h3 class="text-sm font-semibold text-gray-900">Jump to Section</h3>
+                        </div>
+                        <div class="p-2">
+                            
+                            @for (pageSection of formSections(); track pageSection.id) {
+                            <button (click)="scrollToSection(pageSection.id)"
+                                class="w-full px-4 py-3 text-left text-sm font-medium rounded-xl transition-all flex items-center gap-3"
+                                [class.bg-indigo-50]="activeSection() === pageSection.id"
+                                [class.text-indigo-600]="activeSection() === pageSection.id"
+                                [class.text-gray-600]="activeSection() !== pageSection.id"
+                                [class.hover:bg-gray-50]="activeSection() !== pageSection.id">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                                    [class.bg-indigo-100]="activeSection() === pageSection.id"
+                                    [class.bg-gray-100]="activeSection() !== pageSection.id">
+                                    <i class="bi" [class]="pageSection.icon"
+                                        [class.text-indigo-600]="activeSection() === pageSection.id"></i>
+                                </div>
+                                <span class="text-gray-600">{{ pageSection.label}}</span>
+                                @if (pageSection.required) {
+                                <span class="ml-auto text-xs text-red-500">*</span>
+                                }
+                            </button>
+                            }
+                        </div>
+                    </nav>
+
+                    <!-- Templates -->
+                    @if (!isEditMode()) {
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">Quick Start Templates</h3>
+                        <div class="space-y-2">
+                            @for (template of categoryTemplates(); track template.id) {
+                            <button (click)="applyTemplate(template)"
+                                class="w-full p-3 text-left rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                                        [style.background-color]="template.color">
+                                        <i class="bi" [class]="template.icon"></i>
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                            {{ template.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ template.description }}</p>
+                                    </div>
+                                </div>
+                            </button>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <form [formGroup]="categoryForm" class="lg:col-span-3 space-y-8">
+
+                <!-- Basic Information Section -->
+                <section id="basic" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-info-circle text-indigo-600 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Basic Information</h2>
+                                    <p class="text-sm text-gray-500">Essential category details</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-red-500 font-medium">* Required</span>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Category Name -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Category Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" formControlName="name" (input)="onNameChange()"
+                                        placeholder="Enter category name"
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-lg"
+                                        [class.border-red-300]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+                                    <div class="flex justify-between mt-1">
+                                        @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                                        <p class="text-sm text-red-600 flex items-center gap-1">
+                                            <i class="bi bi-exclamation-circle"></i>
+                                            Category name is required
+                                        </p>
+                                        } @else {
+                                        <span></span>
+                                        }
+                                        <span class="text-xs text-gray-400">{{ categoryForm.get('name')?.value?.length
+                                            || 0 }}/100</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slug & Parent -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        URL Slug <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">/category/</span>
+                                        <input type="text" formControlName="slug" placeholder="category-url"
+                                            class="w-full pl-[90px] pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm"
+                                            [class.border-red-300]="categoryForm.get('slug')?.invalid && categoryForm.get('slug')?.touched">
+                                        <button type="button" (click)="generateSlug()"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 hover:bg-indigo-50 rounded">
+                                            Regenerate
+                                        </button>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">This will be used in the category URL</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Parent Category
+                                    </label>
+                                    <div class="relative">
+                                        <select formControlName="parentId"
+                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer pr-10">
+                                            <option [ngValue]="null">None (Top Level Category)</option>
+                                            @for (cat of availableParents(); track cat.id) {
+                                            <option [ngValue]="cat.id">
+                                                {{ '—'.repeat(getCategoryLevel(cat.id)) }} {{ cat.name }}
+                                            </option>
+                                            }
+                                        </select>
+                                        <i
+                                            class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Leave empty for a top-level category</p>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Description
+                                </label>
+                                <div
+                                    class="border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+                                    <!-- Rich Text Toolbar -->
+                                    <div class="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-200">
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Bold">
+                                            <i class="bi bi-type-bold"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Italic">
+                                            <i class="bi bi-type-italic"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Underline">
+                                            <i class="bi bi-type-underline"></i>
+                                        </button>
+                                        <div class="w-px h-5 bg-gray-300 mx-1"></div>
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Bullet List">
+                                            <i class="bi bi-list-ul"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Numbered List">
+                                            <i class="bi bi-list-ol"></i>
+                                        </button>
+                                        <div class="w-px h-5 bg-gray-300 mx-1"></div>
+                                        <button type="button"
+                                            class="p-2 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+                                            title="Insert Link">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+                                    </div>
+                                    <textarea formControlName="description" rows="5"
+                                        placeholder="Describe what customers can find in this category..."
+                                        class="w-full px-4 py-3 bg-white resize-none focus:outline-none"></textarea>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <p class="text-xs text-gray-500">This description will appear on the category page
+                                    </p>
+                                    <span class="text-xs text-gray-400">{{
+                                        categoryForm.get('description')?.value?.length || 0 }}/500</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Visual Identity Section -->
+                <section id="visual" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-palette text-pink-600 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Visual Identity</h2>
+                                    <p class="text-sm text-gray-500">Customize the appearance of this category</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Color & Icon -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        Category Color
+                                    </label>
+                                    <div class="flex items-center gap-4">
+                                        <div class="relative">
+                                            <input type="color" formControlName="color"
+                                                class="w-16 h-16 rounded-xl border-2 border-gray-200 cursor-pointer p-1"
+                                                [style.background-color]="categoryForm.get('color')?.value">
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="text" formControlName="color"
+                                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono uppercase"
+                                                placeholder="#6366F1">
+                                            <p class="mt-1 text-xs text-gray-500">Choose a color that represents this
+                                                category</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Preset Colors -->
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        @for (color of presetColors(); track color) {
+                                        <button type="button" (click)="categoryForm.patchValue({ color })"
+                                            class="w-8 h-8 rounded-lg border-2 border-transparent hover:border-gray-400 transition-all"
+                                            [style.background-color]="color"
+                                            [class.ring-2]="categoryForm.get('color')?.value?.toLowerCase() === color.toLowerCase()"
+                                            [class.ring-offset-2]="categoryForm.get('color')?.value?.toLowerCase() === color.toLowerCase()"
+                                            [class.ring-indigo-500]="categoryForm.get('color')?.value?.toLowerCase() === color.toLowerCase()">
+                                        </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        Category Icon
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">bi-</span>
+                                        <input type="text" formControlName="icon" placeholder="laptop"
+                                            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Enter a Bootstrap Icons name (e.g., laptop,
+                                        phone, house)</p>
+
+                                    <!-- Icon Preview -->
+                                    <div class="mt-3 p-4 bg-gray-50 rounded-xl flex items-center justify-center">
+                                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg"
+                                            [style.background-color]="categoryForm.get('color')?.value">
+                                            <i class="bi"
+                                                [class]="'bi-' + (categoryForm.get('icon')?.value || 'folder')"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Common Icons -->
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        @for (icon of commonIcons(); track icon) {
+                                        <button type="button" (click)="categoryForm.patchValue({ icon })"
+                                            class="w-10 h-10 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 flex items-center justify-center text-gray-600 transition-all"
+                                            [class.bg-indigo-50]="categoryForm.get('icon')?.value === icon"
+                                            [class.border-indigo-300]="categoryForm.get('icon')?.value === icon"
+                                            [class.text-indigo-600]="categoryForm.get('icon')?.value === icon">
+                                            <i class="bi" [class]="'bi-' + icon"></i>
+                                        </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Image Upload -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3">
+                                    Category Image
+                                </label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer relative overflow-hidden"
+                                        [class.border-indigo-500]="previewImage()" [class.bg-indigo-50]="previewImage()"
+                                        (click)="fileInput.click()" (dragover)="$event.preventDefault()"
+                                        (drop)="onImageDrop($event)">
+
+                                        @if (previewImage(); as img) {
+                                        <div class="relative">
+                                            <img [src]="img" class="max-h-48 mx-auto rounded-xl shadow-lg">
+                                            <button type="button" (click)="$event.stopPropagation(); removeImage()"
+                                                class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        } @else {
+                                        <div class="flex flex-col items-center">
+                                            <div
+                                                class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                                <i class="bi bi-cloud-arrow-up text-gray-400 text-3xl"></i>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-900 mb-1">Click to upload or drag
+                                                and drop</p>
+                                            <p class="text-xs text-gray-500 mb-4">SVG, PNG, JPG or GIF (max. 2MB,
+                                                800x600px)</p>
+                                            <button type="button"
+                                                class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                                Select Image
+                                            </button>
+                                        </div>
+                                        }
+                                        <input #fileInput type="file" accept="image/*" class="hidden"
+                                            (change)="onFileSelected($event)">
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div class="p-4 bg-gray-50 rounded-xl">
+                                            <h4 class="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                                <i class="bi bi-info-circle text-indigo-600"></i>
+                                                Image Guidelines
+                                            </h4>
+                                            <ul class="text-sm text-gray-600 space-y-2">
+                                                <li class="flex items-start gap-2">
+                                                    <i class="bi bi-check-circle-fill text-green-500 mt-0.5"></i>
+                                                    <span>Use high-quality images (min 800x600px)</span>
+                                                </li>
+                                                <li class="flex items-start gap-2">
+                                                    <i class="bi bi-check-circle-fill text-green-500 mt-0.5"></i>
+                                                    <span>Maintain consistent aspect ratio (4:3)</span>
+                                                </li>
+                                                <li class="flex items-start gap-2">
+                                                    <i class="bi bi-check-circle-fill text-green-500 mt-0.5"></i>
+                                                    <span>Use relevant, representative imagery</span>
+                                                </li>
+                                                <li class="flex items-start gap-2">
+                                                    <i class="bi bi-check-circle-fill text-green-500 mt-0.5"></i>
+                                                    <span>Keep file size under 2MB for fast loading</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        @if (previewImage()) {
+                                        <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                            <h4 class="text-sm font-medium text-indigo-900 mb-2">Image SEO</h4>
+                                            <input type="text" formControlName="imageAlt"
+                                                placeholder="Describe this image for accessibility..."
+                                                class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-gear text-orange-600 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Category Settings</h2>
+                                    <p class="text-sm text-gray-500">Configure visibility and display options</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Status Toggles -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                                <i class="bi bi-check-circle text-green-600"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-900">Active Status</p>
+                                                <p class="text-xs text-gray-500">Make this category visible</p>
+                                            </div>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" formControlName="isActive" class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Inactive categories are hidden from the storefront
+                                    </p>
+                                </div>
+
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                                <i class="bi bi-star text-yellow-600"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-900">Featured Category</p>
+                                                <p class="text-xs text-gray-500">Highlight on homepage</p>
+                                            </div>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" formControlName="isFeatured" class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Featured categories appear prominently on the
+                                        homepage</p>
+                                </div>
+                            </div>
+
+                            <!-- Display Options -->
+                            <div class="space-y-4">
+                                <h3 class="text-sm font-medium text-gray-900">Display Options</h3>
+
+                                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                                    <input type="checkbox" id="showInMenu" formControlName="showInMenu"
+                                        class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <div class="flex-1">
+                                        <label for="showInMenu"
+                                            class="text-sm font-medium text-gray-900 cursor-pointer">Show in Main
+                                            Navigation</label>
+                                        <p class="text-xs text-gray-500">Display this category in the main menu</p>
+                                    </div>
+                                    <i class="bi bi-menu-button-wide text-gray-400 text-xl"></i>
+                                </div>
+
+                                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                                    <input type="checkbox" id="showInFooter" formControlName="showInFooter"
+                                        class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <div class="flex-1">
+                                        <label for="showInFooter"
+                                            class="text-sm font-medium text-gray-900 cursor-pointer">Show in
+                                            Footer</label>
+                                        <p class="text-xs text-gray-500">Display this category in the footer links</p>
+                                    </div>
+                                    <i class="bi bi-layout-text-window-reverse text-gray-400 text-xl"></i>
+                                </div>
+                            </div>
+
+                            <!-- Sort Order -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Sort Order
+                                </label>
+                                <div class="flex items-center gap-4">
+                                    <input type="number" formControlName="sortOrder" min="0"
+                                        class="w-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                    <p class="text-sm text-gray-500">Lower numbers appear first. Categories are sorted
+                                        by this value within their parent.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEO Section -->
+                <section id="seo" class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-globe text-blue-600 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Search Engine Optimization</h2>
+                                    <p class="text-sm text-gray-500">Optimize for better search visibility</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- SEO Preview -->
+                            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <h3 class="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+                                    <i class="bi bi-google text-blue-600"></i>
+                                    Search Engine Preview
+                                </h3>
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <p class="text-blue-800 text-lg hover:underline cursor-pointer line-clamp-1">
+                                        {{ categoryForm.get('seoTitle')?.value || categoryForm.get('name')?.value ||
+                                        'Category Name' }}
+                                    </p>
+                                    <p class="text-green-700 text-sm mt-1">
+                                        www.yourstore.com/category/{{ categoryForm.get('slug')?.value || 'category-slug'
+                                        }}
+                                    </p>
+                                    <p class="text-gray-600 text-sm mt-1 line-clamp-2">
+                                        {{ categoryForm.get('seoDescription')?.value ||
+                                        categoryForm.get('description')?.value || 'Category description will appear
+                                        here...' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- SEO Fields -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        SEO Title
+                                    </label>
+                                    <input type="text" formControlName="seoTitle"
+                                        placeholder="Category Name | Your Store"
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                    <div class="flex justify-between mt-1">
+                                        <span class="text-xs text-gray-500">Recommended: 50-60 characters</span>
+                                        <span class="text-xs text-gray-400"
+                                            [class.text-red-500]="(categoryForm.get('seoTitle')?.value?.length || 0) > 60">
+                                            {{ categoryForm.get('seoTitle')?.value?.length || 0 }}/60
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Meta Description
+                                    </label>
+                                    <textarea formControlName="seoDescription" rows="3"
+                                        placeholder="Brief description that appears in search results..."
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                                    <div class="flex justify-between mt-1">
+                                        <span class="text-xs text-gray-500">Recommended: 150-160 characters</span>
+                                        <span class="text-xs text-gray-400"
+                                            [class.text-red-500]="(categoryForm.get('seoDescription')?.value?.length || 0) > 160">
+                                            {{ categoryForm.get('seoDescription')?.value?.length || 0 }}/160
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Meta Keywords
+                                    </label>
+                                    <input type="text" formControlName="metaKeywords"
+                                        placeholder="keyword1, keyword2, keyword3"
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                    <p class="text-xs text-gray-500 mt-1">Separate keywords with commas</p>
+                                </div>
+
+                                <!-- Advanced SEO -->
+                                <div class="pt-4 border-t border-gray-100">
+                                    <button type="button" (click)="showAdvancedSeo.set(!showAdvancedSeo())"
+                                        class="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                        <i class="bi" [class.bi-chevron-down]="!showAdvancedSeo()"
+                                            [class.bi-chevron-up]="showAdvancedSeo()"></i>
+                                        Advanced SEO Options
+                                    </button>
+
+                                    @if (showAdvancedSeo()) {
+                                    <div class="mt-4 space-y-4 animate-slide-down">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Canonical URL
+                                            </label>
+                                            <input type="text" formControlName="canonicalUrl"
+                                                placeholder="https://yourstore.com/custom-category-url"
+                                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Robots Meta Tag
+                                            </label>
+                                            <div class="relative">
+                                                <select formControlName="robotsMeta"
+                                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer pr-10">
+                                                    <option value="">Default (index, follow)</option>
+                                                    <option value="index, follow">Index, Follow</option>
+                                                    <option value="noindex, follow">No Index, Follow</option>
+                                                    <option value="index, nofollow">Index, No Follow</option>
+                                                    <option value="noindex, nofollow">No Index, No Follow</option>
+                                                </select>
+                                                <i
+                                                    class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Danger Zone -->
+                @if (isEditMode()) {
+                <section class="scroll-mt-24">
+                    <div class="bg-white rounded-2xl shadow-sm border border-red-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-exclamation-triangle text-red-600 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-red-900">Danger Zone</h2>
+                                    <p class="text-sm text-red-600">Destructive actions for this category</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center justify-between p-4 border border-red-200 rounded-xl">
+                                <div>
+                                    <p class="font-medium text-gray-900">Delete Category</p>
+                                    <p class="text-sm text-gray-500">Permanently delete this category and all its data
+                                    </p>
+                                </div>
+                                <button (click)="deleteCategory()"
+                                    class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
+                                    <i class="bi bi-trash3"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                }
+
+            </form>
+        </div>
+    </div>
+
+</div>

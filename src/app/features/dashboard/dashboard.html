@@ -1,0 +1,45 @@
+<div class="mx-auto space-y-6 p-4 sm:p-6 lg:p-8">
+    <!-- Welcome Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p class="text-gray-500 mt-1">Welcome back! Here's what's happening with your store today.</p>
+        </div>
+        <div class="flex gap-3">
+            <button
+                class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <i class="bi bi-calendar-event w-4 h-4"></i>
+                <span>Last 30 Days</span>
+            </button>
+            <button
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-200">
+                <i class="bi bi-plus w-4 h-4"></i>
+                <span>Add Product</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+     <div class="grid grid-cols-1">
+        <app-kpi-cards></app-kpi-cards>
+     </div>
+    
+
+    <!-- Analytics Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <app-sales-chart class="lg:col-span-2"></app-sales-chart>
+        <app-traffic-sources></app-traffic-sources>
+    </div>
+
+    <!-- Products & Inventory -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <app-top-products class="lg:col-span-2"></app-top-products>
+        <app-inventory-status></app-inventory-status>
+    </div>
+
+    <!-- Orders & Customers -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <app-recent-orders></app-recent-orders>
+        <app-customer-insights></app-customer-insights>
+    </div>
+</div>

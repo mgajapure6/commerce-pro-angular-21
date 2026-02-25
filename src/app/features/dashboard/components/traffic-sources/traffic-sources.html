@@ -1,0 +1,19 @@
+<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-100">
+    <h3 class="text-lg font-semibold text-gray-900 mb-1">Traffic Sources</h3>
+    <p class="text-sm text-gray-500 mb-6">Where your customers come from</p>
+
+    <div class="space-y-4">
+        @for (source of trafficSources(); track source.name) {
+        <div>
+            <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-600">{{ source.name }}</span>
+                <span class="font-medium text-gray-900">{{ source.value }}%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="h-2 rounded-full transition-all duration-500" [style.width.%]="source.value"
+                    [style.background-color]="source.color"></div>
+            </div>
+        </div>
+        }
+    </div>
+</div>

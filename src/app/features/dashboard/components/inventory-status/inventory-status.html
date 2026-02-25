@@ -1,0 +1,50 @@
+<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-115">
+    <h3 class="text-lg font-semibold text-gray-900 mb-1">Inventory Status</h3>
+    <p class="text-sm text-gray-500 mb-6">Stock levels overview</p>
+
+    <div class="space-y-6">
+        <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="bi bi-card-checklist text-green-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">In Stock</p>
+                    <p class="text-xs text-gray-500">Products available</p>
+                </div>
+            </div>
+            <span class="text-2xl font-bold text-green-600">{{ stats().inStock }}</span>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <i class="bi bi-exclamation-triangle text-yellow-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">Low Stock</p>
+                    <p class="text-xs text-gray-500">Below 10 units</p>
+                </div>
+            </div>
+            <span class="text-2xl font-bold text-yellow-600">{{ stats().lowStock }}</span>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="bi bi-window-x text-red-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">Out of Stock</p>
+                    <p class="text-xs text-gray-500">Needs restocking</p>
+                </div>
+            </div>
+            <span class="text-2xl font-bold text-red-600">{{ stats().outOfStock }}</span>
+        </div>
+    </div>
+
+    <button
+        class="w-full mt-6 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        Manage Inventory
+    </button>
+</div>

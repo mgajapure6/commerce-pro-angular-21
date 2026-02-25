@@ -1,0 +1,45 @@
+<div class="relative">
+    <button (click)="toggle()" class="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+        <i class="bi bi-envelope-at w-5 h-5 text-gray-600"></i>
+        @if (unreadCount() > 0) {
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white"></span>
+        }
+    </button>
+
+    @if (isOpen()) {
+    <div OutsideClickDirective (appOutsideClick)="toggle()" class="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-dropdown">
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">Messages</h3>
+            <button (click)="markAllRead()" class="text-xs text-indigo-600 font-medium hover:underline">Mark all
+                read</button>
+        </div>
+        <div class="max-h-96 overflow-y-auto">
+            @for (message of messages(); track message.id) {
+            <div class="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50"
+                [class.bg-indigo-50]="!message.read">
+                <div class="flex gap-3">
+                    <img [src]="message.senderAvatar" class="w-10 h-10 rounded-full" [alt]="message.sender">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ message.sender }}</p>
+                            <span class="text-xs text-gray-400">{{ message.timestamp | date:'shortTime' }}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 truncate">{{ message.preview }}</p>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1"
+                            [class.bg-indigo-100]="message.type === 'customer'"
+                            [class.text-indigo-800]="message.type === 'customer'"
+                            [class.bg-green-100]="message.type === 'supplier'"
+                            [class.text-green-800]="message.type === 'supplier'">
+                            {{ message.type | titlecase }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        <div class="p-3 border-t border-gray-100 text-center">
+            <a href="#" class="text-sm text-indigo-600 font-medium hover:underline">Open Inbox</a>
+        </div>
+    </div>
+    }
+</div>

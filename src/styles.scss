@@ -1,0 +1,42 @@
+@use 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css");
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8f9fc;
+}
+
+@layer base {
+  html{
+    font-size: 80%;
+  }
+}
+
+@layer components {
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:text-indigo-600 transition-colors;
+
+    &:hover {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+    }
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
