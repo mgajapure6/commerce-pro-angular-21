@@ -19,9 +19,7 @@ import { Header } from './shared/components/header/header';
 
       <!-- Main Content -->
       <div 
-        class="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ease-in-out"
-        [class.md:ml-20]="sidebarCollapsed()"
-        [class.md:ml-72]="!sidebarCollapsed()">
+        class="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ease-in-out">
         
         <app-header 
           (toggleSidebar)="toggleSidebar()"
