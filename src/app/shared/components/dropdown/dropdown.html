@@ -1,0 +1,60 @@
+<div class="relative inline-block text-left" OutsideClickDirective (appOutsideClick)="close()" #dropdownContainer>
+
+    <!-- Trigger Button -->
+    <button type="button" (click)="toggle($event)" [disabled]="disabled"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        [class.bg-indigo-50]="isOpen()" [class.border-indigo-300]="isOpen()" [class.text-indigo-600]="isOpen()"
+        [class.rounded-xl]="!triggerClass.includes('rounded-')" [ngClass]="triggerClass">
+
+        @if (icon) {
+        <i class="bi bi-{{icon}}" [class.text-lg]="!icon.includes('-sm')"></i>
+        }
+
+        <span *ngIf="label">{{ label }}</span>
+
+        @if (showChevron) {
+        <i class="bi bi-chevron-down text-sm transition-transform duration-200" [class.rotate-180]="isOpen()"></i>
+        }
+    </button>
+
+    <!-- Dropdown Menu -->
+    @if (isOpen()) {
+    <div #dropdownMenu
+        class="fixed z-50 w-56 bg-white rounded-xl shadow-lg border border-gray-100 ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in"
+        [style.top.px]="menuPosition().top"
+        [style.left.px]="menuPosition().left" [style.right.px]="menuPosition().right"
+        [style.bottom.px]="menuPosition().bottom" [style.max-height.px]="menuPosition().maxHeight"
+        [style.overflow-y]="menuPosition().maxHeight ? 'auto' : 'visible'" [ngClass]="menuClass">
+
+        <div class="py-1">
+            @for (item of items; track item.id) {
+            @if (item.divider) {
+            <div class="h-px bg-gray-100 my-1"></div>
+            } @else {
+            <button type="button" (click)="selectItem(item, $event)" [disabled]="item.disabled"
+                class="group w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50"
+                [class.text-gray-700]="!item.danger" [class.text-red-600]="item.danger"
+                [class.hover:bg-red-50]="item.danger">
+
+                @if (item.icon) {
+                <i class="bi bi-{{item.icon}} text-lg" [class.text-gray-400]="!item.danger && !item.disabled"
+                    [class.text-indigo-500]="!item.danger && !item.disabled"
+                    [class.group-hover:text-indigo-600]="!item.danger && !item.disabled"
+                    [class.text-red-500]="item.danger"></i>
+                }
+
+                <span class="flex-1">{{ item.label }}</span>
+
+                @if (item.shortcut) {
+                <kbd
+                    class="hidden sm:inline-block px-2 py-0.5 text-xs font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded">
+                    {{ item.shortcut }}
+                </kbd>
+                }
+            </button>
+            }
+            }
+        </div>
+    </div>
+    }
+</div>

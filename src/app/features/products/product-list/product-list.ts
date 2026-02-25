@@ -39,6 +39,9 @@ interface Product {
   styleUrl: './product-list.scss'
 })
 export class ProductList {
+  // expose global Math for template
+  readonly Math: typeof Math = Math;
+
   // View state
   viewMode = signal<'table' | 'grid'>('table');
   showFilters = signal(false);
@@ -555,6 +558,4 @@ export class ProductList {
     };
     return dots[status] || 'bg-gray-500';
   }
-  
-  protected readonly Math = Math;
 }
