@@ -1,0 +1,453 @@
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header Section -->
+        <div
+            class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Customers</h1>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                        {{ filteredCustomers().length }} customers
+                    </span>
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage your customer base, track loyalty, and analyze behavior</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button (click)="toggleFilters()"
+                    class="group px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-funnel group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">Filters</span>
+                    @if (activeFiltersCount() > 0) {
+                    <span class="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
+                        {{ activeFiltersCount() }}
+                    </span>
+                    }
+                </button>
+
+                <button (click)="toggleViewMode()"
+                    class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm">
+                    <i class="bi bi-{{viewMode() === 'table' ? 'grid' : 'list'}}"></i>
+                </button>
+
+                <app-dropdown label="Export" icon="download" position="auto" align="end" [items]="[
+            { id: 'csv', label: 'Export as CSV', icon: 'filetype-csv' },
+            { id: 'excel', label: 'Export as Excel', icon: 'filetype-xlsx' },
+            { id: 'pdf', label: 'Export as PDF', icon: 'filetype-pdf' }
+          ]" triggerClass="shadow-sm" (itemSelected)="exportCustomers($event.id)">
+                </app-dropdown>
+
+                <a routerLink="/customers/add"
+                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5">
+                    <i class="bi bi-plus-lg"></i>
+                    <span class="hidden sm:inline">Add Customer</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            @for (stat of customerStats(); track stat.label) {
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                [class.ring-2]="selectedQuickFilter() === stat.filter"
+                [class.ring-indigo-500]="selectedQuickFilter() === stat.filter" (click)="applyQuickFilter(stat.filter)">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{{ stat.label }}</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                            {{ stat.value }}
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors {{ stat.bgColor }}">
+                        <i class="bi bi-{{stat.icon}} {{stat.iconColor}} text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                        [class]="stat.trend >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                        {{ stat.trend >= 0 ? '+' : '' }}{{ stat.trend }}%
+                    </span>
+                    <span class="text-xs text-gray-400">vs last month</span>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Advanced Filters Panel -->
+        @if (showFilters()) {
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-funnel-fill text-indigo-600"></i>
+                    Advanced Filters
+                </h3>
+                <button (click)="clearAllFilters()" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Clear all
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Customers</label>
+                    <div class="relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" [(ngModel)]="searchQuery"
+                            placeholder="Search by name, email, phone, customer #..."
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Customer Type -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Customer Type</label>
+                    <select [(ngModel)]="filterType"
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer">
+                        <option value="">All Types</option>
+                        <option value="new">New</option>
+                        <option value="returning">Returning</option>
+                        <option value="vip">VIP</option>
+                        <option value="wholesale">Wholesale</option>
+                    </select>
+                    <i
+                        class="bi bi-chevron-down absolute right-3 top-[38px] -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+
+                <!-- Status -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Account Status</label>
+                    <select [(ngModel)]="filterStatus"
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                    <i
+                        class="bi bi-chevron-down absolute right-3 top-[38px] -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+
+                <!-- Order Count Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Order Count</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" [(ngModel)]="filterMinOrders" placeholder="Min"
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                        <span class="text-gray-400">-</span>
+                        <input type="number" [(ngModel)]="filterMaxOrders" placeholder="Max"
+                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+
+                <!-- Total Spent Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Total Spent ($)</label>
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                            <input type="number" [(ngModel)]="filterMinSpent" placeholder="Min"
+                                class="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                        </div>
+                        <span class="text-gray-400">-</span>
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                            <input type="number" [(ngModel)]="filterMaxSpent" placeholder="Max"
+                                class="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Registered From</label>
+                    <input type="date" [(ngModel)]="filterDateFrom"
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Registered To</label>
+                    <input type="date" [(ngModel)]="filterDateTo"
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                </div>
+
+                <!-- Tags -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                    <input type="text" [(ngModel)]="filterTags" placeholder="e.g. vip, newsletter..."
+                        class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                </div>
+
+                <!-- Marketing Consent -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Marketing Consent</label>
+                    <div class="flex gap-2">
+                        <button (click)="filterMarketingConsent.set(filterMarketingConsent() === true ? null : true)"
+                            class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                            [class.bg-indigo-600]="filterMarketingConsent() === true"
+                            [class.text-white]="filterMarketingConsent() === true"
+                            [class.bg-gray-100]="filterMarketingConsent() !== true"
+                            [class.text-gray-700]="filterMarketingConsent() !== true">
+                            Subscribed
+                        </button>
+                        <button (click)="filterMarketingConsent.set(filterMarketingConsent() === false ? null : false)"
+                            class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                            [class.bg-indigo-600]="filterMarketingConsent() === false"
+                            [class.text-white]="filterMarketingConsent() === false"
+                            [class.bg-gray-100]="filterMarketingConsent() !== false"
+                            [class.text-gray-700]="filterMarketingConsent() !== false">
+                            Unsubscribed
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Bulk Actions Bar -->
+        @if (selectedCustomers().length > 0) {
+        <div
+            class="bg-indigo-600 text-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-indigo-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-check-square text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-semibold">{{ selectedCustomers().length }} customers selected</p>
+                    <p class="text-sm text-indigo-100">Choose an action to apply to selected customers</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button (click)="bulkEmail()"
+                    class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <i class="bi bi-envelope"></i>
+                    Email
+                </button>
+                <button (click)="bulkTag()"
+                    class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <i class="bi bi-tags"></i>
+                    Add Tags
+                </button>
+                <button (click)="bulkExport()"
+                    class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <i class="bi bi-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+        }
+
+        <!-- Customers Table View -->
+        @if (viewMode() === 'table') {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50/50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left w-12">
+                                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 group"
+                                (click)="sort('name')">
+                                Customer
+                                <i class="bi bi-arrow-down-up ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    [class.opacity-100]="sortField() === 'name'"></i>
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Contact
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Type & Status
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 group"
+                                (click)="sort('totalOrders')">
+                                Orders
+                                <i class="bi bi-arrow-down-up ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    [class.opacity-100]="sortField() === 'totalOrders'"></i>
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 group"
+                                (click)="sort('totalSpent')">
+                                Total Spent
+                                <i class="bi bi-arrow-down-up ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    [class.opacity-100]="sortField() === 'totalSpent'"></i>
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 group"
+                                (click)="sort('lastOrderDate')">
+                                Last Order
+                                <i class="bi bi-arrow-down-up ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    [class.opacity-100]="sortField() === 'lastOrderDate'"></i>
+                            </th>
+                            <th
+                                class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @for (customer of paginatedCustomers(); track customer.id) {
+                        <tr class="group hover:bg-gray-50/50 transition-colors"
+                            [class.bg-indigo-50/30]="isSelected(customer.id)">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" [checked]="isSelected(customer.id)"
+                                    (change)="toggleSelection(customer.id)"
+                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img [src]="customer.avatar" [alt]="getFullName(customer)"
+                                        class="w-10 h-10 rounded-full object-cover bg-gray-100">
+                                    <div>
+                                        <a [routerLink]="['/customers', customer.id]"
+                                            class="font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
+                                            {{ getFullName(customer) }}
+                                        </a>
+                                        <p class="text-xs text-gray-500">{{ customer.customerNumber }}</p>
+                                        @if (customer.tags.length > 0) {
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            @for (tag of customer.tags.slice(0, 2); track tag) {
+                                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">{{ tag
+                                                }}</span>
+                                            }
+                                            @if (customer.tags.length > 2) {
+                                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">+{{
+                                                customer.tags.length - 2 }}</span>
+                                            }
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1 text-sm">
+                                    <a href="mailto:{{ customer.email }}"
+                                        class="text-gray-600 hover:text-indigo-600 transition-colors">
+                                        {{ customer.email }}
+                                    </a>
+                                    <span class="text-gray-500">{{ customer.phone }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit {{ getTypeColor(customer.type) }}">
+                                        <i class="bi bi-{{getCustomerTypeIcon(customer.type)}} mr-1"></i>
+                                        {{ customer.type | titlecase }}
+                                    </span>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit {{ getStatusColor(customer.status) }}">
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full mr-1.5 {{ getStatusDot(customer.status) }}"></span>
+                                        {{ customer.status | titlecase }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-gray-900">{{ customer.totalOrders }}</span>
+                                    <span class="text-xs text-gray-500">Avg: ${{ customer.averageOrderValue |
+                                        number:'1.0-0' }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-semibold text-gray-900">${{ customer.totalSpent | number:'1.2-2'
+                                    }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (customer.lastOrderDate) {
+                                <div class="flex flex-col">
+                                    <span class="text-sm text-gray-900">{{ getTimeAgo(customer.lastOrderDate) }}</span>
+                                    <span class="text-xs text-gray-500">{{ formatDate(customer.lastOrderDate) }}</span>
+                                </div>
+                                } @else {
+                                <span class="text-sm text-gray-400">No orders</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <a [routerLink]="['/customers', customer.id]"
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                        title="View Profile">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <app-dropdown icon="three-dots-vertical" position="auto" align="end"
+                                        [items]="getCustomerMenuItems(customer)"
+                                        triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0 shadow-none"
+                                        menuClass="w-52" 
+                                        (itemSelected)="onCustomerAction($event, customer)"
+                                        [showChevron]="false">
+                                    </app-dropdown>
+                                </div>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div
+                                        class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                        <i class="bi bi-people text-2xl text-gray-400"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-1">No customers found</h3>
+                                    <p class="text-gray-500 mb-4">Try adjusting your filters or search query</p>
+                                    <button (click)="clearAllFilters()"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer -->
+            <div
+                class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500">Show</span>
+                    <select [(ngModel)]="itemsPerPage" (change)="currentPage.set(1)"
+                        class="px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option [value]="10">10</option>
+                        <option [value]="25">25</option>
+                        <option [value]="50">50</option>
+                        <option [value]="100">100</option>
+                    </select>
+                    <span class="text-sm text-gray-500">of {{ filteredCustomers().length }} customers</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button (click)="previousPage()" [disabled]="currentPage() === 1"
+                        class="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    @for (page of visiblePages(); track page) {
+                    @if (page === '...') {
+                    <span class="px-3 py-2 text-gray-400">...</span>
+                    } @else {
+                    <button (click)="goToPage(+page)" class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        [class.bg-indigo-600]="currentPage() === page" [class.text-white]="currentPage() === page"
+                        [class.text-gray-700]="currentPage() !== page"
+                        [class.hover:bg-gray-100]="currentPage() !== page">
+                        {{ page }}
+                    </button>
+                    }
+                    }
+
+                    <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                        class="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        } @else {
+        <!-- Grid View -->
+
+        }
+    </div>
+</div>

@@ -7,8 +7,12 @@ export const ORDERS_ROUTES: Routes = [
     component: Orders
   },
   {
-    path: 'list',
+    path: 'all',
     loadComponent: () => import('./order-list/order-list').then(m => m.OrderList)
+  },
+  {
+    path: 'details/:id',
+    loadComponent: () => import('./order-details/order-details').then(m => m.OrderDetails)
   },
   {
     path: 'add',
@@ -31,8 +35,28 @@ export const ORDERS_ROUTES: Routes = [
     loadComponent: () => import('./order-shipped/order-shipped').then(m => m.OrderShipped)
   },
   {
-    path: 'return',
+    path: 'delivered',
+    loadComponent: () => import('./order-delivered/order-delivered').then(m => m.OrderDelivered)
+  },
+  {
+    path: 'cancelled',
+    loadComponent: () => import('./order-cancelled/order-cancelled').then(m => m.OrderCancelled)
+  },
+  {
+    path: 'returns',
     loadComponent: () => import('./order-return/order-return').then(m => m.OrderReturn)
+  },
+  {
+    path: 'refunds',
+    loadComponent: () => import('./order-refund/order-refund').then(m => m.OrderRefund)
+  },
+  {
+    path: 'drafts',
+    loadComponent: () => import('./order-drafts/order-drafts').then(m => m.OrderDrafts)
+  },
+  {
+    path: 'bulk',
+    loadComponent: () => import('./order-bulk/order-bulk').then(m => m.OrderBulk)
   },
 
 ];
