@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hist_001",
+    "type": "edit",
+    "title": "Mass Price Update",
+    "description": "Increased prices by 10% for Electronics category",
+    "icon": "pencil-square",
+    "status": "completed",
+    "timestamp": "2024-02-20T10:30:00Z",
+    "affectedCount": 45,
+    "duration": 3.2,
+    "canUndo": true
+  },
+  {
+    "id": "hist_002",
+    "type": "import",
+    "title": "Product Import",
+    "description": "Imported 125 new products from CSV",
+    "icon": "upload",
+    "status": "completed",
+    "timestamp": "2024-02-19T14:15:00Z",
+    "affectedCount": 125,
+    "duration": 12.5,
+    "canUndo": false
+  },
+  {
+    "id": "hist_003",
+    "type": "export",
+    "title": "Full Catalog Export",
+    "description": "Exported all products to Excel format",
+    "icon": "download",
+    "status": "completed",
+    "timestamp": "2024-02-18T09:00:00Z",
+    "affectedCount": 1247,
+    "duration": 8.3,
+    "canUndo": false
+  },
+  {
+    "id": "hist_004",
+    "type": "copy",
+    "title": "Duplicate Products",
+    "description": "Created copies of 15 products",
+    "icon": "copy",
+    "status": "completed",
+    "timestamp": "2024-02-15T16:45:00Z",
+    "affectedCount": 15,
+    "duration": 2.1,
+    "canUndo": true
+  },
+  {
+    "id": "hist_005",
+    "type": "delete",
+    "title": "Archive Old Products",
+    "description": "Archived 32 discontinued products",
+    "icon": "archive",
+    "status": "completed",
+    "timestamp": "2024-02-10T11:20:00Z",
+    "affectedCount": 32,
+    "duration": 1.5,
+    "canUndo": true
+  }
+]

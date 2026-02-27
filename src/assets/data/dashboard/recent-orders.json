@@ -1,0 +1,47 @@
+[
+  {
+    "id": "#12345",
+    "customerName": "Sarah Johnson",
+    "customerAvatar": "https://i.pravatar.cc/150?img=32",
+    "items": 3,
+    "total": 299.00,
+    "status": "processing",
+    "date": "2024-02-20T14:30:00Z"
+  },
+  {
+    "id": "#12344",
+    "customerName": "Mike Chen",
+    "customerAvatar": "https://i.pravatar.cc/150?img=12",
+    "items": 1,
+    "total": 89.00,
+    "status": "shipped",
+    "date": "2024-02-20T13:45:00Z"
+  },
+  {
+    "id": "#12343",
+    "customerName": "Emma Davis",
+    "customerAvatar": "https://i.pravatar.cc/150?img=45",
+    "items": 5,
+    "total": 567.00,
+    "status": "delivered",
+    "date": "2024-02-20T11:20:00Z"
+  },
+  {
+    "id": "#12342",
+    "customerName": "James Wilson",
+    "customerAvatar": "https://i.pravatar.cc/150?img=60",
+    "items": 2,
+    "total": 178.00,
+    "status": "pending",
+    "date": "2024-02-20T09:15:00Z"
+  },
+  {
+    "id": "#12341",
+    "customerName": "Lisa Anderson",
+    "customerAvatar": "https://i.pravatar.cc/150?img=28",
+    "items": 4,
+    "total": 445.00,
+    "status": "delivered",
+    "date": "2024-02-19T16:45:00Z"
+  }
+]

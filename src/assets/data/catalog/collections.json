@@ -1,0 +1,60 @@
+[
+  {
+    "id": "coll_001",
+    "name": "Summer Sale 2024",
+    "slug": "summer-sale-2024",
+    "description": "Hot deals for summer season",
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "type": "manual",
+    "isActive": true,
+    "isFeatured": true,
+    "sortOrder": 0,
+    "productCount": 45,
+    "productIds": ["prod_001", "prod_004", "prod_005"],
+    "seoTitle": "Summer Sale 2024 - Up to 50% Off",
+    "seoDescription": "Shop our summer sale with amazing discounts",
+    "createdAt": "2024-02-01T00:00:00Z",
+    "updatedAt": "2024-02-20T00:00:00Z"
+  },
+  {
+    "id": "coll_002",
+    "name": "New Arrivals",
+    "slug": "new-arrivals",
+    "description": "Check out our latest products",
+    "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800",
+    "type": "automated",
+    "isActive": true,
+    "isFeatured": true,
+    "sortOrder": 1,
+    "productCount": 78,
+    "conditions": [
+      { "id": "cond_001", "field": "createdAt", "relation": "greater_than", "value": "2024-01-01" }
+    ],
+    "conditionOperator": "and",
+    "seoTitle": "New Arrivals - Latest Products",
+    "seoDescription": "Discover our newest arrivals",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-02-20T00:00:00Z"
+  },
+  {
+    "id": "coll_003",
+    "name": "Premium Electronics",
+    "slug": "premium-electronics",
+    "description": "High-end electronics collection",
+    "image": "https://images.unsplash.com/photo-1498049860654-af1a5c5668ba?w=800",
+    "type": "automated",
+    "isActive": true,
+    "isFeatured": false,
+    "sortOrder": 2,
+    "productCount": 34,
+    "conditions": [
+      { "id": "cond_002", "field": "category", "relation": "equals", "value": "electronics" },
+      { "id": "cond_003", "field": "price", "relation": "greater_than", "value": "200" }
+    ],
+    "conditionOperator": "and",
+    "seoTitle": "Premium Electronics Collection",
+    "seoDescription": "Shop premium electronics",
+    "createdAt": "2024-01-15T00:00:00Z",
+    "updatedAt": "2024-02-18T00:00:00Z"
+  }
+]

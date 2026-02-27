@@ -41,15 +41,20 @@ describe('Warehouses', () => {
   });
 
   it('should render action buttons for each warehouse', () => {
-    const firstRow = fixture.debugElement.query(By.css('table tbody tr'));
-    const actionButtons = firstRow.queryAll(By.css('.action-buttons button'));
-    expect(actionButtons.length).toBe(2);
+    const firstRow = fixture.debugElement.query(By.css('.grid > div'));
+    const actionButtons = firstRow.queryAll(By.css('button'));
+    // Filter to get the action buttons (edit and delete)
+    const editButton = actionButtons.find(btn => btn.query(By.css('.bi-pencil')));
+    const deleteButton = actionButtons.find(btn => btn.query(By.css('.bi-trash')));
+    
+    expect(editButton).toBeTruthy();
+    expect(deleteButton).toBeTruthy();
 
-    const editButtonIcon = actionButtons[0].query(By.css('ng-icon'));
-    expect(editButtonIcon.attributes['name']).toBe('heroPencil');
+    const editButtonIcon = editButton.query(By.css('.bi-pencil'));
+    expect(editButtonIcon).toBeTruthy();
 
-    const deleteButtonIcon = actionButtons[1].query(By.css('ng-icon'));
-    expect(deleteButtonIcon.attributes['name']).toBe('heroTrash');
+    const deleteButtonIcon = deleteButton.query(By.css('.bi-trash'));
+    expect(deleteButtonIcon).toBeTruthy();
   });
 
   it('should display an empty state message when there are no warehouses', () => {

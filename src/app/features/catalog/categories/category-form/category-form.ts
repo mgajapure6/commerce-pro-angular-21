@@ -4,41 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  parentId?: string | null;
-  parentName?: string;
-  image?: string;
-  icon?: string;
-  color: string;
-  isActive: boolean;
-  isFeatured: boolean;
-  sortOrder: number;
-  showInMenu: boolean;
-  showInFooter: boolean;
-  productCount: number;
-  seoTitle?: string;
-  seoDescription?: string;
-  metaKeywords?: string;
-  canonicalUrl?: string;
-  robotsMeta?: string;
-  customFields?: Record<string, string>;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-interface CategoryTemplate {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  defaultFields: Partial<Category>;
-}
+import { 
+  Category, 
+  CategoryTemplate 
+} from '../../../../core/models/category.model';
 
 @Component({
   selector: 'app-category-form',
@@ -67,11 +36,11 @@ export class CategoryForm implements OnInit {
   
   // Data
   allCategories = signal<Category[]>([
-    { id: '1', name: 'Electronics', slug: 'electronics', color: '#6366f1', isActive: true, isFeatured: true, sortOrder: 0, showInMenu: true, showInFooter: true, productCount: 1250 },
-    { id: '2', name: 'Smartphones', slug: 'smartphones', parentId: '1', color: '#8b5cf6', isActive: true, isFeatured: false, sortOrder: 0, showInMenu: true, showInFooter: false, productCount: 450 },
-    { id: '3', name: 'Laptops', slug: 'laptops', parentId: '1', color: '#ec4899', isActive: true, isFeatured: true, sortOrder: 1, showInMenu: true, showInFooter: false, productCount: 320 },
-    { id: '4', name: 'Clothing', slug: 'clothing', color: '#f59e0b', isActive: true, isFeatured: true, sortOrder: 1, showInMenu: true, showInFooter: true, productCount: 890 },
-    { id: '5', name: "Men's Wear", slug: 'mens-wear', parentId: '4', color: '#10b981', isActive: true, isFeatured: false, sortOrder: 0, showInMenu: true, showInFooter: false, productCount: 420 },
+    { id: '1', name: 'Electronics', slug: 'electronics', color: '#6366f1', isActive: true, isFeatured: true, sortOrder: 0, showInMenu: true, showInFooter: true, productCount: 1250, subcategories: [] },
+    { id: '2', name: 'Smartphones', slug: 'smartphones', parentId: '1', color: '#8b5cf6', isActive: true, isFeatured: false, sortOrder: 0, showInMenu: true, showInFooter: false, productCount: 450, subcategories: [] },
+    { id: '3', name: 'Laptops', slug: 'laptops', parentId: '1', color: '#ec4899', isActive: true, isFeatured: true, sortOrder: 1, showInMenu: true, showInFooter: false, productCount: 320, subcategories: [] },
+    { id: '4', name: 'Clothing', slug: 'clothing', color: '#f59e0b', isActive: true, isFeatured: true, sortOrder: 1, showInMenu: true, showInFooter: true, productCount: 890, subcategories: [] },
+    { id: '5', name: "Men's Wear", slug: 'mens-wear', parentId: '4', color: '#10b981', isActive: true, isFeatured: false, sortOrder: 0, showInMenu: true, showInFooter: false, productCount: 420, subcategories: [] },
   ]);
   
   // Templates

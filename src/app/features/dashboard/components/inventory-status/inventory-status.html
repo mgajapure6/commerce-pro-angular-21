@@ -1,50 +1,94 @@
-<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-115">
+<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-full flex flex-col">
     <h3 class="text-lg font-semibold text-gray-900 mb-1">Inventory Status</h3>
-    <p class="text-sm text-gray-500 mb-6">Stock levels overview</p>
+    <p class="text-sm text-gray-500 mb-5">Stock levels overview</p>
 
-    <div class="space-y-6">
-        <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="bi bi-card-checklist text-green-600"></i>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-900">In Stock</p>
-                    <p class="text-xs text-gray-500">Products available</p>
+    @if (isLoading()) {
+        <!-- Loading Skeleton -->
+        <div class="space-y-3">
+            @for (i of [1,2,3]; track i) {
+            <div class="p-4 bg-gray-50 rounded-xl animate-pulse">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="w-24 h-4 bg-gray-200 rounded mb-1"></div>
+                        <div class="w-16 h-3 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-8 bg-gray-200 rounded"></div>
                 </div>
             </div>
-            <span class="text-2xl font-bold text-green-600">{{ stats() }}</span>
+            }
         </div>
-
-        <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <i class="bi bi-exclamation-triangle text-yellow-600"></i>
+    } @else {
+        <!-- Stats Cards -->
+        <div class="space-y-3 mb-4">
+            <!-- In Stock -->
+            <div class="flex items-center justify-between p-3 bg-green-50 rounded-xl border border-green-100">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="bi bi-card-checklist text-green-600"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-medium text-gray-900 text-sm">In Stock</p>
+                        <p class="text-xs text-gray-500">{{ stats().inStock.percentage }}% of products</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="font-medium text-gray-900">Low Stock</p>
-                    <p class="text-xs text-gray-500">Below 10 units</p>
-                </div>
+                <span class="text-xl font-bold text-green-600 flex-shrink-0">{{ stats().inStock.count }}</span>
             </div>
-            <span class="text-2xl font-bold text-yellow-600">{{ stats() }}</span>
-        </div>
 
-        <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="bi bi-window-x text-red-600"></i>
+            <!-- Low Stock -->
+            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle text-yellow-600"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-medium text-gray-900 text-sm">Low Stock</p>
+                        <p class="text-xs text-gray-500">{{ stats().lowStock.percentage }}% of products</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="font-medium text-gray-900">Out of Stock</p>
-                    <p class="text-xs text-gray-500">Needs restocking</p>
-                </div>
+                <span class="text-xl font-bold text-yellow-600 flex-shrink-0">{{ stats().lowStock.count }}</span>
             </div>
-            <span class="text-2xl font-bold text-red-600">{{ stats() }}</span>
-        </div>
-    </div>
 
-    <button
-        class="w-full mt-6 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <!-- Out of Stock -->
+            <div class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="bi bi-window-x text-red-600"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-medium text-gray-900 text-sm">Out of Stock</p>
+                        <p class="text-xs text-gray-500">{{ stats().outOfStock.percentage }}% of products</p>
+                    </div>
+                </div>
+                <span class="text-xl font-bold text-red-600 flex-shrink-0">{{ stats().outOfStock.count }}</span>
+            </div>
+        </div>
+
+        <!-- Needs Attention Section -->
+        @if (attentionProducts().length > 0) {
+        <div class="border-t border-gray-100 pt-4 mt-auto">
+            <h4 class="text-sm font-medium text-gray-900 mb-3">Needs Attention</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
+                @for (product of attentionProducts(); track product.id) {
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <img [src]="product.image" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0">
+                        <span class="text-sm text-gray-700 truncate">{{ product.name }}</span>
+                    </div>
+                    <span class="text-xs font-medium flex-shrink-0"
+                        [class.text-yellow-600]="product.stockStatus === 'low_stock'"
+                        [class.text-red-600]="product.stockStatus === 'out_of_stock'">
+                        {{ product.stock }} left
+                    </span>
+                </div>
+                }
+            </div>
+        </div>
+        }
+    }
+
+    <a href="/inventory"
+        class="block w-full mt-5 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-center">
         Manage Inventory
-    </button>
+    </a>
 </div>

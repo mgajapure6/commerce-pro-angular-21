@@ -1,0 +1,7 @@
+[
+  { "name": "Direct", "value": 42, "color": "#6366f1", "visitors": 4850, "change": 5.2 },
+  { "name": "Social Media", "value": 28, "color": "#3b82f6", "visitors": 3233, "change": 12.8 },
+  { "name": "Organic Search", "value": 18, "color": "#22c55e", "visitors": 2078, "change": -3.1 },
+  { "name": "Referral", "value": 8, "color": "#eab308", "visitors": 923, "change": 8.5 },
+  { "name": "Email", "value": 4, "color": "#ef4444", "visitors": 462, "change": 15.3 }
+]

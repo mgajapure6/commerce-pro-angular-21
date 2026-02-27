@@ -1,19 +1,59 @@
-<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-100">
+<div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-full flex flex-col">
     <h3 class="text-lg font-semibold text-gray-900 mb-1">Traffic Sources</h3>
     <p class="text-sm text-gray-500 mb-6">Where your customers come from</p>
 
-    <div class="space-y-4">
-        @for (source of trafficSources(); track source.name) {
-        <div>
-            <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-600">{{ source.name }}</span>
-                <span class="font-medium text-gray-900">{{ source.value }}%</span>
+    @if (isLoading()) {
+        <!-- Loading Skeleton -->
+        <div class="space-y-4">
+            @for (i of [1,2,3,4,5]; track i) {
+            <div class="animate-pulse">
+                <div class="flex justify-between text-sm mb-1">
+                    <div class="w-20 h-4 bg-gray-200 rounded"></div>
+                    <div class="w-10 h-4 bg-gray-200 rounded"></div>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="h-2 rounded-full bg-gray-200" style="width: 60%"></div>
+                </div>
             </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-                <div class="h-2 rounded-full transition-all duration-500" [style.width.%]="source.value"
-                    [style.background-color]="source.color"></div>
+            }
+        </div>
+    } @else {
+        <div class="space-y-4">
+            @for (source of sortedSources(); track source.name) {
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full" [style.background-color]="source.color"></span>
+                        <span class="text-gray-600">{{ source.name }}</span>
+                        @if (source.change !== undefined) {
+                            <span class="text-xs" [class.text-green-600]="source.change > 0" [class.text-red-600]="source.change < 0">
+                                {{ source.change > 0 ? '+' : '' }}{{ source.change }}%
+                            </span>
+                        }
+                    </div>
+                    <div class="text-right">
+                        <span class="font-medium text-gray-900">{{ source.value }}%</span>
+                        @if (source.visitors) {
+                            <span class="text-xs text-gray-500 ml-1">({{ source.visitors | number }} visitors)</span>
+                        }
+                    </div>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" [style.width.%]="source.value"
+                        [style.background-color]="source.color"></div>
+                </div>
+            </div>
+            }
+        </div>
+        
+        <!-- Total Visitors Summary -->
+        <div class="mt-6 pt-4 border-t border-gray-100">
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">Total Visitors</span>
+                <span class="text-lg font-semibold text-gray-900">
+                    {{ totalVisitors() | number }}
+                </span>
             </div>
         </div>
-        }
-    </div>
+    }
 </div>

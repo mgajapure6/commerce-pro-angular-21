@@ -1,0 +1,42 @@
+[
+  {
+    "id": "act_001",
+    "type": "order",
+    "title": "New Order Received",
+    "description": "Order #12345 from Sarah Johnson for $299.00",
+    "timestamp": "2024-02-20T14:30:00Z",
+    "isRead": false
+  },
+  {
+    "id": "act_002",
+    "type": "customer",
+    "title": "New Customer",
+    "description": "Emily Brown registered as a new customer",
+    "timestamp": "2024-02-20T13:15:00Z",
+    "isRead": false
+  },
+  {
+    "id": "act_003",
+    "type": "review",
+    "title": "New 5-Star Review",
+    "description": "Wireless Headphones Pro received a 5-star review",
+    "timestamp": "2024-02-20T12:45:00Z",
+    "isRead": true
+  },
+  {
+    "id": "act_004",
+    "type": "inventory",
+    "title": "Low Stock Alert",
+    "description": "Gaming Laptop Pro is running low on stock (8 remaining)",
+    "timestamp": "2024-02-20T11:30:00Z",
+    "isRead": false
+  },
+  {
+    "id": "act_005",
+    "type": "order",
+    "title": "Order Shipped",
+    "description": "Order #12344 has been shipped to Mike Chen",
+    "timestamp": "2024-02-20T10:20:00Z",
+    "isRead": true
+  }
+]

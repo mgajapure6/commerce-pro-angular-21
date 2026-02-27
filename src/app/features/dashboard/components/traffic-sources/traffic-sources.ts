@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 
@@ -10,7 +10,23 @@ import { DashboardService } from '../../../../core/services/dashboard.service';
   styleUrl: './traffic-sources.scss' 
 })
 export class TrafficSources {
-  trafficSources = computed(() => this.dashboardService.trafficSources());
-
-  constructor(private dashboardService: DashboardService) {}
+  private dashboardService = inject(DashboardService);
+  
+  trafficSources = this.dashboardService.trafficSourcesList;
+  isLoading = this.dashboardService.isLoading;
+  
+  // Computed total for percentage calculations
+  totalValue = computed(() => 
+    this.trafficSources().reduce((sum, source) => sum + source.value, 0)
+  );
+  
+  // Get sources sorted by value
+  sortedSources = computed(() => 
+    [...this.trafficSources()].sort((a, b) => b.value - a.value)
+  );
+  
+  // Total visitors from top 5 sources
+  totalVisitors = computed(() => 
+    this.trafficSources().slice(0, 5).reduce((sum, s) => sum + (s.visitors || 0), 0)
+  );
 }

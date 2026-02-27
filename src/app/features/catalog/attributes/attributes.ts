@@ -1,35 +1,14 @@
 
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Dropdown, DropdownItem } from '../../../shared/components/dropdown/dropdown';
-
-interface AttributeOption {
-  id: string;
-  label: string;
-  value: string;
-  sortOrder: number;
-}
-
-interface Attribute {
-  id: string;
-  name: string;
-  code: string;
-  description?: string;
-  type: 'select' | 'multiselect' | 'text' | 'textarea' | 'color' | 'image' | 'boolean' | 'number' | 'date';
-  options: AttributeOption[];
-  isFilterable: boolean;
-  isRequired: boolean;
-  isVariant: boolean;
-  isVisible: boolean;
-  isComparable: boolean;
-  isActive: boolean;
-  color?: string;
-  productCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { 
+  Attribute, 
+  AttributeType 
+} from '../../../core/models/attribute.model';
+import { AttributeService } from '../../../core/services/attribute.service';
 
 @Component({
   selector: 'app-attributes',
@@ -38,8 +17,9 @@ interface Attribute {
   templateUrl: './attributes.html',
   styleUrl: './attributes.scss'
 })
-export class Attributes {
+export class Attributes implements OnInit {
   private fb = inject(FormBuilder);
+  private attributeService = inject(AttributeService);
 
   // expose global Math for template
   readonly Math: typeof Math = Math;
@@ -68,189 +48,10 @@ export class Attributes {
   sortField = signal<string>('name');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
-  // Data
-  attributes = signal<Attribute[]>([
-    {
-      id: 'attr_001',
-      name: 'Color',
-      code: 'color',
-      description: 'Product color options',
-      type: 'color',
-      options: [
-        { id: 'opt_001', label: 'Red', value: '#ef4444', sortOrder: 0 },
-        { id: 'opt_002', label: 'Blue', value: '#3b82f6', sortOrder: 1 },
-        { id: 'opt_003', label: 'Green', value: '#10b981', sortOrder: 2 },
-        { id: 'opt_004', label: 'Black', value: '#1f2937', sortOrder: 3 },
-        { id: 'opt_005', label: 'White', value: '#f9fafb', sortOrder: 4 }
-      ],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: true,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#ef4444',
-      productCount: 456,
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-02-15')
-    },
-    {
-      id: 'attr_002',
-      name: 'Size',
-      code: 'size',
-      description: 'Product size options',
-      type: 'select',
-      options: [
-        { id: 'opt_006', label: 'XS', value: 'xs', sortOrder: 0 },
-        { id: 'opt_007', label: 'S', value: 's', sortOrder: 1 },
-        { id: 'opt_008', label: 'M', value: 'm', sortOrder: 2 },
-        { id: 'opt_009', label: 'L', value: 'l', sortOrder: 3 },
-        { id: 'opt_010', label: 'XL', value: 'xl', sortOrder: 4 },
-        { id: 'opt_011', label: 'XXL', value: 'xxl', sortOrder: 5 }
-      ],
-      isFilterable: true,
-      isRequired: true,
-      isVariant: true,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#8b5cf6',
-      productCount: 892,
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-02-18')
-    },
-    {
-      id: 'attr_003',
-      name: 'Material',
-      code: 'material',
-      description: 'Product material composition',
-      type: 'multiselect',
-      options: [
-        { id: 'opt_012', label: 'Cotton', value: 'cotton', sortOrder: 0 },
-        { id: 'opt_013', label: 'Polyester', value: 'polyester', sortOrder: 1 },
-        { id: 'opt_014', label: 'Wool', value: 'wool', sortOrder: 2 },
-        { id: 'opt_015', label: 'Silk', value: 'silk', sortOrder: 3 },
-        { id: 'opt_016', label: 'Leather', value: 'leather', sortOrder: 4 }
-      ],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: false,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#f59e0b',
-      productCount: 234,
-      createdAt: new Date('2024-01-05'),
-      updatedAt: new Date('2024-02-10')
-    },
-    {
-      id: 'attr_004',
-      name: 'Brand',
-      code: 'brand',
-      description: 'Product manufacturer brand',
-      type: 'select',
-      options: [
-        { id: 'opt_017', label: 'Nike', value: 'nike', sortOrder: 0 },
-        { id: 'opt_018', label: 'Adidas', value: 'adidas', sortOrder: 1 },
-        { id: 'opt_019', label: 'Apple', value: 'apple', sortOrder: 2 },
-        { id: 'opt_020', label: 'Samsung', value: 'samsung', sortOrder: 3 },
-        { id: 'opt_021', label: 'Sony', value: 'sony', sortOrder: 4 }
-      ],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: false,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#06b6d4',
-      productCount: 1234,
-      createdAt: new Date('2024-01-08'),
-      updatedAt: new Date('2024-02-20')
-    },
-    {
-      id: 'attr_005',
-      name: 'Warranty',
-      code: 'warranty',
-      description: 'Product warranty period',
-      type: 'select',
-      options: [
-        { id: 'opt_022', label: '1 Year', value: '1-year', sortOrder: 0 },
-        { id: 'opt_023', label: '2 Years', value: '2-years', sortOrder: 1 },
-        { id: 'opt_024', label: '3 Years', value: '3-years', sortOrder: 2 },
-        { id: 'opt_025', label: '5 Years', value: '5-years', sortOrder: 3 },
-        { id: 'opt_026', label: 'Lifetime', value: 'lifetime', sortOrder: 4 }
-      ],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: false,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#10b981',
-      productCount: 567,
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-02-12')
-    },
-    {
-      id: 'attr_006',
-      name: 'Weight',
-      code: 'weight',
-      description: 'Product weight specification',
-      type: 'number',
-      options: [],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: false,
-      isVisible: true,
-      isComparable: true,
-      isActive: true,
-      color: '#6366f1',
-      productCount: 789,
-      createdAt: new Date('2024-01-12'),
-      updatedAt: new Date('2024-02-14')
-    },
-    {
-      id: 'attr_007',
-      name: 'Dimensions',
-      code: 'dimensions',
-      description: 'Product dimensions (L x W x H)',
-      type: 'text',
-      options: [],
-      isFilterable: false,
-      isRequired: false,
-      isVariant: false,
-      isVisible: true,
-      isComparable: false,
-      isActive: true,
-      color: '#ec4899',
-      productCount: 345,
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-02-16')
-    },
-    {
-      id: 'attr_008',
-      name: 'Pattern',
-      code: 'pattern',
-      description: 'Product pattern or design',
-      type: 'image',
-      options: [
-        { id: 'opt_027', label: 'Solid', value: '/patterns/solid.jpg', sortOrder: 0 },
-        { id: 'opt_028', label: 'Striped', value: '/patterns/striped.jpg', sortOrder: 1 },
-        { id: 'opt_029', label: 'Floral', value: '/patterns/floral.jpg', sortOrder: 2 },
-        { id: 'opt_030', label: 'Checkered', value: '/patterns/checkered.jpg', sortOrder: 3 }
-      ],
-      isFilterable: true,
-      isRequired: false,
-      isVariant: true,
-      isVisible: true,
-      isComparable: true,
-      isActive: false,
-      color: '#f43f5e',
-      productCount: 123,
-      createdAt: new Date('2024-01-18'),
-      updatedAt: new Date('2024-02-08')
-    }
-  ]);
+  // Data from service
+  attributes = this.attributeService.allAttributes;
+  isLoading = this.attributeService.isLoading;
+  error = this.attributeService.currentError;
 
   editingAttribute = signal<Attribute | null>(null);
   selectedQuickFilter = signal<string>('');
@@ -263,8 +64,15 @@ export class Attributes {
     { id: 'pdf', label: 'Export as PDF', icon: 'filetype-pdf' }
   ];
 
+  // Attribute types from service
+  attributeTypes = computed(() => this.attributeService.getAttributeTypes());
+
   constructor() {
     this.initForm();
+  }
+
+  ngOnInit() {
+    // Service loads data automatically
   }
 
   private initForm() {
@@ -361,62 +169,66 @@ export class Attributes {
 
   totalPages = computed(() => Math.ceil(this.filteredAttributes().length / this.itemsPerPage()));
 
-  attributeStats = computed(() => [
-    {
-      label: 'Total Attributes',
-      value: this.attributes().length.toString(),
-      trend: 12.5,
-      icon: 'tags',
-      bgColor: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      filter: 'all'
-    },
-    {
-      label: 'Active',
-      value: this.attributes().filter(a => a.isActive).length.toString(),
-      trend: 8.3,
-      icon: 'check-circle',
-      bgColor: 'bg-green-100',
-      iconColor: 'text-green-600',
-      filter: 'active'
-    },
-    {
-      label: 'Filterable',
-      value: this.attributes().filter(a => a.isFilterable).length.toString(),
-      trend: 15.2,
-      icon: 'funnel',
-      bgColor: 'bg-purple-100',
-      iconColor: 'text-purple-600',
-      filter: 'filterable'
-    },
-    {
-      label: 'For Variants',
-      value: this.attributes().filter(a => a.isVariant).length.toString(),
-      trend: 5.7,
-      icon: 'layers',
-      bgColor: 'bg-orange-100',
-      iconColor: 'text-orange-600',
-      filter: 'variant'
-    },
-    {
-      label: 'Required',
-      value: this.attributes().filter(a => a.isRequired).length.toString(),
-      trend: -2.1,
-      icon: 'asterisk',
-      bgColor: 'bg-red-100',
-      iconColor: 'text-red-600',
-      filter: 'required'
-    },
-    {
-      label: 'With Options',
-      value: this.attributes().filter(a => a.options.length > 0).length.toString(),
-      trend: 10.4,
-      icon: 'list-ul',
-      bgColor: 'bg-cyan-100',
-      iconColor: 'text-cyan-600',
-      filter: 'with_options'
-    }
-  ]);
+  // Stats from service
+  displayStats = computed(() => {
+    const stats = this.attributeService.attributeStats();
+    return [
+      {
+        label: 'Total Attributes',
+        value: stats.total.toString(),
+        trend: 12.5,
+        icon: 'tags',
+        bgColor: 'bg-blue-100',
+        iconColor: 'text-blue-600',
+        filter: 'all'
+      },
+      {
+        label: 'Active',
+        value: stats.active.toString(),
+        trend: 8.3,
+        icon: 'check-circle',
+        bgColor: 'bg-green-100',
+        iconColor: 'text-green-600',
+        filter: 'active'
+      },
+      {
+        label: 'Filterable',
+        value: stats.filterable.toString(),
+        trend: 15.2,
+        icon: 'funnel',
+        bgColor: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        filter: 'filterable'
+      },
+      {
+        label: 'For Variants',
+        value: stats.variant.toString(),
+        trend: 5.7,
+        icon: 'layers',
+        bgColor: 'bg-orange-100',
+        iconColor: 'text-orange-600',
+        filter: 'variant'
+      },
+      {
+        label: 'Required',
+        value: stats.required.toString(),
+        trend: -2.1,
+        icon: 'asterisk',
+        bgColor: 'bg-red-100',
+        iconColor: 'text-red-600',
+        filter: 'required'
+      },
+      {
+        label: 'With Options',
+        value: stats.withOptions.toString(),
+        trend: 10.4,
+        icon: 'list-ul',
+        bgColor: 'bg-cyan-100',
+        iconColor: 'text-cyan-600',
+        filter: 'with_options'
+      }
+    ];
+  });
 
   activeFiltersCount = computed(() => {
     let count = 0;
@@ -599,47 +411,45 @@ export class Attributes {
     this.isSaving.set(true);
     const formValue = this.attributeForm.value;
 
-    setTimeout(() => {
-      if (this.editingAttribute()) {
-        // Update existing
-        this.attributes.update(attrs => attrs.map(a =>
-          a.id === this.editingAttribute()!.id
-            ? {
-                ...a,
-                ...formValue,
-                options: formValue.options.map((o: any) => ({
-                  ...o,
-                  id: o.id || 'opt_' + Math.random().toString(36).substr(2, 9)
-                })),
-                updatedAt: new Date()
-              }
-            : a
-        ));
-      } else {
-        // Create new
-        const newAttribute: Attribute = {
-          id: 'attr_' + Math.random().toString(36).substr(2, 9),
+    if (this.editingAttribute()) {
+      // Update existing
+      this.attributeService.updateAttribute(
+        this.editingAttribute()!.id,
+        {
           ...formValue,
           options: formValue.options.map((o: any) => ({
             ...o,
             id: o.id || 'opt_' + Math.random().toString(36).substr(2, 9)
-          })),
-          productCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        this.attributes.update(attrs => [...attrs, newAttribute]);
-      }
-
-      this.isSaving.set(false);
-      this.closeModal();
-    }, 1000);
+          }))
+        }
+      ).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.closeModal();
+        },
+        error: () => this.isSaving.set(false)
+      });
+    } else {
+      // Create new
+      this.attributeService.createAttribute({
+        ...formValue,
+        options: formValue.options.map((o: any) => ({
+          ...o,
+          id: o.id || 'opt_' + Math.random().toString(36).substr(2, 9)
+        }))
+      }).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.closeModal();
+        },
+        error: () => this.isSaving.set(false)
+      });
+    }
   }
 
   deleteAttribute(attribute: Attribute) {
     if (confirm(`Are you sure you want to delete "${attribute.name}"? This will remove it from all products.`)) {
-      this.attributes.update(attrs => attrs.filter(a => a.id !== attribute.id));
-      this.closeModal();
+      this.attributeService.deleteAttribute(attribute.id).subscribe();
     }
   }
 
@@ -709,6 +519,7 @@ export class Attributes {
     this.filterVariant.set('');
     this.searchQuery.set('');
     this.selectedQuickFilter.set('');
+    this.currentPage.set(1);
   }
 
   // Pagination
@@ -777,10 +588,10 @@ export class Attributes {
         this.duplicateAttribute(attribute);
         break;
       case 'activate':
-        this.toggleAttributeStatus(attribute, true);
+        this.attributeService.updateAttribute(attribute.id, { isActive: true }).subscribe();
         break;
       case 'deactivate':
-        this.toggleAttributeStatus(attribute, false);
+        this.attributeService.updateAttribute(attribute.id, { isActive: false }).subscribe();
         break;
       case 'delete':
         this.deleteAttribute(attribute);
@@ -789,64 +600,43 @@ export class Attributes {
   }
 
   duplicateAttribute(attribute: Attribute) {
-    const newAttr: Attribute = {
+    this.attributeService.createAttribute({
       ...attribute,
-      id: 'attr_' + Math.random().toString(36).substr(2, 9),
       name: attribute.name + ' (Copy)',
-      code: attribute.code + '_copy',
-      productCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.attributes.update(attrs => [...attrs, newAttr]);
-  }
-
-  toggleAttributeStatus(attribute: Attribute, isActive: boolean) {
-    this.attributes.update(attrs => attrs.map(a =>
-      a.id === attribute.id
-        ? { ...a, isActive, updatedAt: new Date() }
-        : a
-    ));
+      code: attribute.code + '_copy'
+    }).subscribe();
   }
 
   // Bulk actions
   bulkActivate() {
-    this.attributes.update(attrs => attrs.map(a =>
-      this.selectedAttributes().includes(a.id)
-        ? { ...a, isActive: true, updatedAt: new Date() }
-        : a
-    ));
-    this.selectedAttributes.set([]);
+    this.attributeService.bulkUpdateStatus(this.selectedAttributes(), true).subscribe(() => {
+      this.selectedAttributes.set([]);
+    });
   }
 
   bulkDeactivate() {
-    this.attributes.update(attrs => attrs.map(a =>
-      this.selectedAttributes().includes(a.id)
-        ? { ...a, isActive: false, updatedAt: new Date() }
-        : a
-    ));
-    this.selectedAttributes.set([]);
+    this.attributeService.bulkUpdateStatus(this.selectedAttributes(), false).subscribe(() => {
+      this.selectedAttributes.set([]);
+    });
   }
 
   bulkSetFilterable(filterable: boolean) {
-    this.attributes.update(attrs => attrs.map(a =>
-      this.selectedAttributes().includes(a.id)
-        ? { ...a, isFilterable: filterable, updatedAt: new Date() }
-        : a
-    ));
-    this.selectedAttributes.set([]);
+    this.attributeService.bulkSetFilterable(this.selectedAttributes(), filterable).subscribe(() => {
+      this.selectedAttributes.set([]);
+    });
   }
 
   bulkDelete() {
     if (confirm(`Delete ${this.selectedAttributes().length} attributes? This action cannot be undone.`)) {
-      this.attributes.update(attrs => attrs.filter(a => !this.selectedAttributes().includes(a.id)));
-      this.selectedAttributes.set([]);
+      this.attributeService.bulkDelete(this.selectedAttributes()).subscribe(() => {
+        this.selectedAttributes.set([]);
+      });
     }
   }
 
   // Export
   onExport(item: DropdownItem) {
     console.log('Exporting as', item.id);
-    // Implement export logic
+    // Implement export logic using BulkOperationService
   }
 }

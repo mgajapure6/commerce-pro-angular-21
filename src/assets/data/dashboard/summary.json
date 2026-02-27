@@ -1,0 +1,11 @@
+{
+  "totalRevenue": 124592.45,
+  "revenueGrowth": 12.5,
+  "totalOrders": 1482,
+  "ordersGrowth": 8.2,
+  "averageOrderValue": 84.12,
+  "aovGrowth": -2.4,
+  "conversionRate": 3.24,
+  "conversionGrowth": 4.1,
+  "period": "daily"
+}

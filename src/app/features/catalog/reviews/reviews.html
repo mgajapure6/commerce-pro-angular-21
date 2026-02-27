@@ -1,1 +1,431 @@
-<p>reviews works!</p>
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header Section -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Reviews</h1>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                        {{ filteredReviews().length }} reviews
+                    </span>
+                    @if (pendingCount() > 0) {
+                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-full animate-pulse">
+                        {{ pendingCount() }} pending
+                    </span>
+                    }
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage product reviews and customer feedback</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button (click)="toggleFilters()"
+                    class="group px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-funnel group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">Filters</span>
+                </button>
+
+                <app-dropdown label="Export" [items]="exportItems" [showChevron]="true"
+                    triggerClass="shadow-sm" (itemSelected)="onExport($event)">
+                </app-dropdown>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            @for (stat of displayStats(); track stat.label) {
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                (click)="applyQuickFilter(stat.filter)">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{{ stat.label }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stat.value }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors {{ stat.bgColor }}">
+                        <i class="bi bi-{{stat.icon}} {{stat.iconColor}} text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                        [class]="stat.trend >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                        {{ stat.trend >= 0 ? '+' : '' }}{{ stat.trend }}%
+                    </span>
+                    <span class="text-xs text-gray-400">vs last month</span>
+                </div>
+            </div>
+            }
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Rating Distribution -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Rating Distribution</h3>
+                    <div class="space-y-3">
+                        @for (item of ratingDistribution(); track item.stars) {
+                        <div class="flex items-center gap-3 cursor-pointer group" (click)="applyRatingFilter(item.stars)">
+                            <span class="text-sm font-medium text-gray-700 w-12">{{ item.stars }} star</span>
+                            <div class="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-400 rounded-full transition-all group-hover:bg-amber-500"
+                                    [style.width.%]="item.percentage"
+                                    [class.ring-2]="filterRating() === item.stars"
+                                    [class.ring-indigo-500]="filterRating() === item.stars">
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-500 w-12 text-right">{{ item.count }}</span>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Rating Filter Indicator -->
+                    @if (filterRating()) {
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">
+                                Showing {{ filterRating() }} star reviews
+                            </span>
+                            <button (click)="filterRating.set(null)" class="text-sm text-indigo-600 hover:text-indigo-800">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="lg:col-span-2 space-y-4">
+                <!-- Filters Panel -->
+                @if (showFilters()) {
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm animate-slide-down">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                            <i class="bi bi-funnel-fill text-indigo-600"></i>
+                            Filters
+                        </h3>
+                        <button (click)="clearFilters()" class="text-sm text-gray-500 hover:text-gray-700">
+                            Clear all
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Search -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                            <div class="relative">
+                                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" [(ngModel)]="searchQuery" placeholder="Product, customer, or content..."
+                                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <div class="flex gap-2">
+                                @for (status of statusOptions; track status.value) {
+                                <button (click)="filterStatus() === ($any(status.value)) ? filterStatus.set('') : filterStatus.set($any(status.value))"
+                                    class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1"
+                                    [class.bg-indigo-600]="filterStatus() === status.value"
+                                    [class.text-white]="filterStatus() === status.value"
+                                    [class.bg-gray-100]="filterStatus() !== status.value"
+                                    [class.text-gray-700]="filterStatus() !== status.value">
+                                    <i class="bi bi-{{status.icon}}"></i>
+                                    {{ status.label }}
+                                </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <!-- Active Filters -->
+                @if (filterStatus() || searchQuery() || filterRating()) {
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-wrap items-center gap-2">
+                    <span class="text-sm text-gray-500">Active filters:</span>
+                    @if (filterStatus()) {
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium flex items-center gap-1">
+                        {{ getStatusLabel(filterStatus()) }}
+                        <button (click)="filterStatus.set('')" class="hover:text-indigo-900">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </span>
+                    }
+                    @if (filterRating()) {
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium flex items-center gap-1">
+                        {{ filterRating() }} Stars
+                        <button (click)="filterRating.set(null)" class="hover:text-amber-900">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </span>
+                    }
+                    @if (searchQuery()) {
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium flex items-center gap-1">
+                        "{{ searchQuery() }}"
+                        <button (click)="searchQuery.set('')" class="hover:text-indigo-900">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </span>
+                    }
+                    <button (click)="clearFilters()" class="text-sm text-gray-500 hover:text-gray-700 ml-auto">
+                        Clear all
+                    </button>
+                </div>
+                }
+
+                <!-- Loading State -->
+                @if (isLoading()) {
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12">
+                    <div class="flex flex-col items-center">
+                        <i class="bi bi-arrow-repeat animate-spin text-3xl text-indigo-600 mb-4"></i>
+                        <p class="text-gray-500">Loading reviews...</p>
+                    </div>
+                </div>
+                }
+
+                <!-- Reviews -->
+                @if (!isLoading()) {
+                <div class="space-y-4">
+                    @for (review of filteredReviews(); track review.id) {
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden"
+                        [class.border-yellow-300]="review.status === 'pending'"
+                        [class.bg-yellow-50/30]="review.status === 'pending'">
+                        
+                        <!-- Review Header -->
+                        <div class="p-5 border-b border-gray-100">
+                            <div class="flex items-start gap-4">
+                                <!-- Product Image -->
+                                <div class="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    @if (review.productImage) {
+                                    <img [src]="review.productImage" [alt]="review.productName" class="w-full h-full object-cover">
+                                    } @else {
+                                    <i class="bi bi-box text-gray-400 text-xl"></i>
+                                    }
+                                </div>
+
+                                <!-- Product & Customer Info -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div>
+                                            <a [routerLink]="['/products']" [queryParams]="{ id: review.productId }"
+                                                class="font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
+                                                {{ review.productName }}
+                                            </a>
+                                            <div class="flex items-center gap-3 mt-1">
+                                                <!-- Rating Stars -->
+                                                <div class="flex text-amber-400">
+                                                    @for (star of [1,2,3,4,5]; track star) {
+                                                    <i class="bi" [class.bi-star-fill]="star <= review.rating" [class.bi-star]="star > review.rating"></i>
+                                                    }
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">{{ review.rating }}.0</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status Badge -->
+                                        <span class="px-2.5 py-1 rounded-lg text-xs font-medium {{ getStatusColor(review.status) }} flex-shrink-0">
+                                            {{ getStatusLabel(review.status) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review Content -->
+                        <div class="p-5">
+                            <!-- Customer Info -->
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    @if (review.customerAvatar) {
+                                    <img [src]="review.customerAvatar" [alt]="review.customerName" class="w-full h-full rounded-full object-cover">
+                                    } @else {
+                                    <span class="text-sm font-medium text-indigo-600">
+                                        {{ review.customerName.charAt(0).toUpperCase() }}
+                                    </span>
+                                    }
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ review.customerName }}</p>
+                                    <p class="text-xs text-gray-500">{{ getRelativeTime(review.createdAt) }}</p>
+                                </div>
+                                @if (review.isVerifiedPurchase) {
+                                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium ml-auto">
+                                    <i class="bi bi-check-circle mr-1"></i>
+                                    Verified Purchase
+                                </span>
+                                }
+                            </div>
+
+                            <!-- Review Text -->
+                            @if (review.title) {
+                            <h4 class="font-medium text-gray-900 mb-2">{{ review.title }}</h4>
+                            }
+                            <p class="text-gray-600 text-sm leading-relaxed">{{ review.content }}</p>
+
+                            <!-- Review Images -->
+                            @if (review.images && review.images.length > 0) {
+                            <div class="flex gap-2 mt-4">
+                                @for (image of review.images; track $index) {
+                                <div class="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+                                    <img [src]="image" alt="Review image" class="w-full h-full object-cover">
+                                </div>
+                                }
+                            </div>
+                            }
+
+                            <!-- Helpful Count -->
+                            <div class="flex items-center gap-4 mt-4 text-sm text-gray-500">
+                                <button (click)="markHelpful(review)" class="flex items-center gap-1 hover:text-indigo-600 transition-colors">
+                                    <i class="bi bi-hand-thumbs-up"></i>
+                                    Helpful ({{ review.helpfulCount }})
+                                </button>
+                                <span>{{ review.helpfulCount + review.unhelpfulCount }} people found this helpful</span>
+                            </div>
+                        </div>
+
+                        <!-- Admin Reply -->
+                        @if (review.reply) {
+                        <div class="px-5 pb-5">
+                            <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-0.5 bg-indigo-600 text-white rounded text-xs font-medium">
+                                        {{ review.reply.authorRole === 'admin' ? 'Admin' : 'Staff' }}
+                                    </span>
+                                    <span class="text-sm font-medium text-gray-900">{{ review.reply.authorName }}</span>
+                                    <span class="text-xs text-gray-500">{{ getRelativeTime(review.reply.createdAt) }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700">{{ review.reply.content }}</p>
+                                <div class="flex gap-2 mt-3">
+                                    <button (click)="openReplyModal(review)" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                        Edit Reply
+                                    </button>
+                                    <button (click)="deleteReply(review)" class="text-xs text-red-600 hover:text-red-800 font-medium">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        }
+
+                        <!-- Actions -->
+                        <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <div class="flex gap-2">
+                                @if (review.status === 'pending') {
+                                <button (click)="approveReview(review)"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1">
+                                    <i class="bi bi-check-lg"></i>
+                                    Approve
+                                </button>
+                                <button (click)="rejectReview(review)"
+                                    class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1">
+                                    <i class="bi bi-x-lg"></i>
+                                    Reject
+                                </button>
+                                } @else {
+                                <button (click)="openReplyModal(review)"
+                                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-1">
+                                    <i class="bi bi-reply"></i>
+                                    {{ review.reply ? 'Edit Reply' : 'Reply' }}
+                                </button>
+                                }
+                            </div>
+
+                            <app-dropdown icon="three-dots-vertical"
+                                [items]="getReviewMenuItems(review)"
+                                triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg border-0 shadow-none"
+                                menuClass="w-48" [showChevron]="false"
+                                (itemSelected)="onReviewAction($event, review)">
+                            </app-dropdown>
+                        </div>
+                    </div>
+                    } @empty {
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm py-12 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                <i class="bi bi-chat-square-text text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">No reviews found</h3>
+                            <p class="text-gray-500 mb-4">Try adjusting your filters</p>
+                            <button (click)="clearFilters()"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Reply Modal -->
+@if (showReplyModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">
+                {{ selectedReview()?.reply ? 'Edit Reply' : 'Reply to Review' }}
+            </h2>
+            <button (click)="closeReplyModal()"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+            <!-- Review Preview -->
+            @if (selectedReview()) {
+            <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="flex text-amber-400 text-sm">
+                        @for (star of [1,2,3,4,5]; track star) {
+                        <i class="bi" [class.bi-star-fill]="star <= selectedReview()!.rating" [class.bi-star]="star > selectedReview()!.rating"></i>
+                        }
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">{{ selectedReview()!.customerName }}</span>
+                </div>
+                <p class="text-sm text-gray-600 line-clamp-2">{{ selectedReview()!.content }}</p>
+            </div>
+            }
+
+            <form [formGroup]="replyForm">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Your Reply <span class="text-red-500">*</span>
+                </label>
+                <textarea formControlName="content" rows="4"
+                    placeholder="Write your response to this review..."
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                    [class.border-red-300]="replyForm.get('content')?.invalid && replyForm.get('content')?.touched"></textarea>
+                @if (replyForm.get('content')?.invalid && replyForm.get('content')?.touched) {
+                <p class="mt-1 text-sm text-red-600 flex items-center gap-1">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Reply must be at least 10 characters
+                </p>
+                }
+            </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="closeReplyModal()"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="saveReply()" [disabled]="replyForm.invalid || isSaving()"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (isSaving()) {
+                <i class="bi bi-arrow-repeat spin"></i>
+                <span>Saving...</span>
+                } @else {
+                <i class="bi bi-send"></i>
+                <span>Post Reply</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+}

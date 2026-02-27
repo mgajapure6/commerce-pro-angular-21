@@ -559,7 +559,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-3">Export Format</label>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             @for (format of exportFormats(); track format.id) {
-                            <button (click)="selectedFormat.set(format.id)"
+                            <button (click)="selectedFormat.set($any(format.id))"
                                 class="p-4 border-2 rounded-xl text-center transition-all flex flex-col items-center gap-2"
                                 [class.border-indigo-600]="selectedFormat() === format.id"
                                 [class.bg-indigo-50]="selectedFormat() === format.id"

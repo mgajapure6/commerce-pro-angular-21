@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cust_001",
+    "name": "Sarah Johnson",
+    "email": "sarah@example.com",
+    "avatar": "https://i.pravatar.cc/150?img=32",
+    "orders": 24,
+    "totalSpent": 4240,
+    "tier": "gold"
+  },
+  {
+    "id": "cust_002",
+    "name": "Mike Chen",
+    "email": "mike@example.com",
+    "avatar": "https://i.pravatar.cc/150?img=12",
+    "orders": 18,
+    "totalSpent": 3180,
+    "tier": "silver"
+  },
+  {
+    "id": "cust_003",
+    "name": "Emma Davis",
+    "email": "emma@example.com",
+    "avatar": "https://i.pravatar.cc/150?img=45",
+    "orders": 15,
+    "totalSpent": 2850,
+    "tier": "silver"
+  },
+  {
+    "id": "cust_004",
+    "name": "John Kamna",
+    "email": "john@example.com",
+    "avatar": "https://i.pravatar.cc/150?img=50",
+    "orders": 19,
+    "totalSpent": 5080,
+    "tier": "platinum"
+  }
+]

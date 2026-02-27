@@ -3,43 +3,24 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Dropdown, DropdownItem } from '../../../shared/components/dropdown/dropdown';
-
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  brand: string;
-  price: number;
-  stock: number;
-  image: string;
-  hasOrders?: boolean;
-}
-
-interface EditableField {
-  id: string;
-  label: string;
-  icon: string;
-}
-
-interface ExportField {
-  id: string;
-  label: string;
-  selected: boolean;
-}
-
-interface OperationHistoryItem {
-  id: string;
-  type: 'edit' | 'import' | 'export' | 'copy' | 'delete';
-  title: string;
-  description: string;
-  icon: string;
-  status: 'completed' | 'pending' | 'failed';
-  timestamp: Date;
-  affectedCount: number;
-  duration?: number;
-  canUndo: boolean;
-}
+import { 
+  ProductSummary as Product,
+  BulkOperationType,
+  EditableField,
+  ExportField,
+  OperationHistoryItem,
+  BulkEditValues,
+  CopyOptions,
+  DeleteOptions,
+  ExportOptions,
+  ImportMode,
+  ExportFormat,
+  ImportPreviewRow
+} from '../../../core/models';
+import { ProductService } from '../../../core/services/product.service';
+import { BulkOperationService } from '../../../core/services/bulk-operation.service';
+import { CategoryService } from '../../../core/services/category.service';
+import { BrandService } from '../../../core/services/brand.service';
 
 @Component({
   selector: 'app-bulk-operations',
@@ -50,50 +31,24 @@ interface OperationHistoryItem {
 })
 export class BulkOperations {
   private router = inject(Router);
+  private productService = inject(ProductService);
+  private bulkOperationService = inject(BulkOperationService);
+  private categoryService = inject(CategoryService);
+  private brandService = inject(BrandService);
 
   // View State
-  activeOperation = signal<'edit' | 'import' | 'export' | 'copy' | 'delete'>('edit');
+  activeOperation = signal<BulkOperationType>('edit');
   showHistory = signal(false);
   showSettings = signal(false);
   showProductSelector = signal(false);
-  isProcessing = signal(false);
 
+  // Data from services
+  allProducts = this.productService.allProducts;
+  operationHistory = this.bulkOperationService.operationHistory;
+  isProcessing = this.bulkOperationService.isProcessing;
+  
   // Selection
-  selectedProducts = signal<Product[]>([
-    {
-      id: 'prod_001',
-      name: 'Wireless Headphones Pro',
-      sku: 'WH-PRO-001',
-      category: 'Electronics',
-      brand: 'Sony',
-      price: 299.99,
-      stock: 45,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop',
-      hasOrders: true
-    },
-    {
-      id: 'prod_002',
-      name: 'Mechanical Keyboard RGB',
-      sku: 'KB-RGB-002',
-      category: 'Electronics',
-      brand: 'Keychron',
-      price: 149.99,
-      stock: 23,
-      image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=100&h=100&fit=crop',
-      hasOrders: false
-    },
-    {
-      id: 'prod_004',
-      name: 'Running Shoes Pro',
-      sku: 'RS-PRO-004',
-      category: 'Sports',
-      brand: 'Nike',
-      price: 129.99,
-      stock: 78,
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
-      hasOrders: true
-    }
-  ]);
+  selectedProducts = signal<Product[]>([]);
 
   // Operations Configuration
   operations = signal([
@@ -116,7 +71,8 @@ export class BulkOperations {
     { id: 'description', label: 'Description', icon: 'text-left' }
   ]);
   selectedFields = signal<string[]>(['status']);
-  bulkValues = signal<any>({
+  
+  bulkValues = signal<BulkEditValues>({
     status: 'active',
     category: '',
     priceOperation: 'set',
@@ -133,14 +89,15 @@ export class BulkOperations {
     findText: '',
     replaceText: ''
   });
+  
   newTagInput = signal('');
   validationErrors = signal<{ id: string; product: string; message: string }[]>([]);
 
   // Import Operation
   uploadedFile = signal<File | null>(null);
-  importMode = signal<'create' | 'update' | 'upsert' | 'replace'>('upsert');
+  importMode = signal<ImportMode>('upsert');
   skipValidation = signal(false);
-  importPreview = signal<any[]>([]);
+  importPreview = signal<ImportPreviewRow[]>([]);
 
   // Export Operation
   exportFormats = signal([
@@ -149,7 +106,8 @@ export class BulkOperations {
     { id: 'json', label: 'JSON', icon: 'filetype-json' },
     { id: 'xml', label: 'XML', icon: 'filetype-xml' }
   ]);
-  selectedFormat = signal('csv');
+  selectedFormat = signal<ExportFormat>('csv');
+  
   exportableFields = signal<ExportField[]>([
     { id: 'id', label: 'ID', selected: true },
     { id: 'name', label: 'Name', selected: true },
@@ -167,19 +125,21 @@ export class BulkOperations {
     { id: 'createdAt', label: 'Created Date', selected: false },
     { id: 'updatedAt', label: 'Updated Date', selected: false }
   ]);
-  exportOptions = signal({
+  
+  exportOptions = signal<ExportOptions>({
     includeImages: false,
     includeVariants: false,
     includeMetadata: true,
     useHeaders: true
   });
-  totalProductCount = signal(1247);
+  
+  totalProductCount = computed(() => this.allProducts().length);
 
   // Copy Operation
-  copyOptions = signal({
-    namingPattern: 'suffix' as 'suffix' | 'prefix' | 'custom',
+  copyOptions = signal<CopyOptions>({
+    namingPattern: 'suffix',
     customPattern: '{original} - Copy',
-    skuPattern: 'suffix' as 'suffix' | 'timestamp' | 'random' | 'custom',
+    skuPattern: 'suffix',
     customSkuPattern: 'SKU-{original}-COPY',
     copyImages: true,
     copyVariants: true,
@@ -188,7 +148,7 @@ export class BulkOperations {
   });
 
   // Delete Operation
-  deleteOptions = signal({
+  deleteOptions = signal<DeleteOptions>({
     deleteImages: false,
     deleteVariants: true,
     archiveInstead: false
@@ -203,46 +163,6 @@ export class BulkOperations {
     defaultPageSize: 25
   });
 
-  // History
-  operationHistory = signal<OperationHistoryItem[]>([
-    {
-      id: 'hist_001',
-      type: 'edit',
-      title: 'Mass Price Update',
-      description: 'Increased prices by 10% for Electronics category',
-      icon: 'pencil-square',
-      status: 'completed',
-      timestamp: new Date('2024-02-20T10:30:00'),
-      affectedCount: 45,
-      duration: 3.2,
-      canUndo: true
-    },
-    {
-      id: 'hist_002',
-      type: 'import',
-      title: 'Product Import',
-      description: 'Imported 125 new products from CSV',
-      icon: 'upload',
-      status: 'completed',
-      timestamp: new Date('2024-02-19T14:15:00'),
-      affectedCount: 125,
-      duration: 12.5,
-      canUndo: false
-    },
-    {
-      id: 'hist_003',
-      type: 'export',
-      title: 'Full Catalog Export',
-      description: 'Exported all products to Excel format',
-      icon: 'download',
-      status: 'completed',
-      timestamp: new Date('2024-02-18T09:00:00'),
-      affectedCount: 1247,
-      duration: 8.3,
-      canUndo: false
-    }
-  ]);
-
   // Product Selector
   productSelectorQuery = signal('');
   productSelectorResults = signal<Product[]>([]);
@@ -256,16 +176,18 @@ export class BulkOperations {
     { id: 'seasonal_prep', label: 'Seasonal Preparation', icon: 'sun' }
   ];
 
-  // Available Options
-  availableCategories = signal([
-    { id: 'electronics', name: 'Electronics' },
-    { id: 'clothing', name: 'Clothing' },
-    { id: 'home', name: 'Home & Garden' },
-    { id: 'sports', name: 'Sports' },
-    { id: 'beauty', name: 'Beauty' }
-  ]);
+  // Available Options from services
+  availableCategories = computed(() => 
+    this.categoryService.allCategories()
+      .filter(c => c.isActive)
+      .map(c => ({ id: c.id, name: c.name }))
+  );
 
-  availableBrands = signal(['Sony', 'Nike', 'Apple', 'Samsung', 'Keychron', 'Generic']);
+  availableBrands = computed(() => 
+    this.brandService.allBrands()
+      .filter(b => b.isActive)
+      .map(b => b.name)
+  );
 
   // Computed Values
   selectedCount = computed(() => this.selectedProducts().length);
@@ -296,70 +218,32 @@ export class BulkOperations {
   estimatedFileSize = computed(() => {
     const fields = this.selectedExportFieldsCount();
     const products = this.selectedCount() || this.totalProductCount();
-    const bytes = products * fields * 50; // Rough estimate
+    const bytes = products * fields * 50;
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   });
 
   constructor() {
-    // Initialize product selector with all products
-    this.productSelectorResults.set([
-      {
-        id: 'prod_001',
-        name: 'Wireless Headphones Pro',
-        sku: 'WH-PRO-001',
-        category: 'Electronics',
-        brand: 'Sony',
-        price: 299.99,
-        stock: 45,
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop'
-      },
-      {
-        id: 'prod_002',
-        name: 'Mechanical Keyboard RGB',
-        sku: 'KB-RGB-002',
-        category: 'Electronics',
-        brand: 'Keychron',
-        price: 149.99,
-        stock: 23,
-        image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=100&h=100&fit=crop'
-      },
-      {
-        id: 'prod_003',
-        name: 'Smart Watch Series 5',
-        sku: 'SW-S5-003',
-        category: 'Electronics',
-        brand: 'Apple',
-        price: 399.99,
-        stock: 0,
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop'
-      },
-      {
-        id: 'prod_004',
-        name: 'Running Shoes Pro',
-        sku: 'RS-PRO-004',
-        category: 'Sports',
-        brand: 'Nike',
-        price: 129.99,
-        stock: 78,
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop'
-      },
-      {
-        id: 'prod_005',
-        name: 'Leather Handbag',
-        sku: 'BG-LTH-005',
-        category: 'Clothing',
-        brand: 'Coach',
-        price: 249.99,
-        stock: 12,
-        image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&h=100&fit=crop'
-      }
-    ]);
+    // Initialize product selector
+    this.productSelectorResults.set(
+      this.allProducts().slice(0, 10).map(p => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        brand: p.brand,
+        price: p.price,
+        stock: p.stock,
+        image: p.image,
+        status: p.status,
+        hasOrders: Math.random() > 0.7 // Simulated
+      }))
+    );
   }
 
   // Operations
-  setActiveOperation(op: 'edit' | 'import' | 'export' | 'copy' | 'delete') {
+  setActiveOperation(op: BulkOperationType) {
     this.activeOperation.set(op);
   }
 
@@ -407,9 +291,23 @@ export class BulkOperations {
   searchProducts() {
     const query = this.productSelectorQuery().toLowerCase();
     if (!query) {
-      // Reset to all
+      this.productSelectorResults.set(
+        this.allProducts().slice(0, 10).map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          category: p.category,
+          brand: p.brand,
+          price: p.price,
+          stock: p.stock,
+          image: p.image,
+          status: p.status,
+          hasOrders: Math.random() > 0.7
+        }))
+      );
       return;
     }
+    
     this.productSelectorResults.update(products => 
       products.filter(p => 
         p.name.toLowerCase().includes(query) ||
@@ -432,21 +330,21 @@ export class BulkOperations {
   // Tag Management
   addBulkTag() {
     const tag = this.newTagInput().trim();
-    if (tag && !this.bulkValues().tags.includes(tag)) {
-      this.bulkValues.update(v => ({ ...v, tags: [...v.tags, tag] }));
+    if (tag && !this.bulkValues().tags?.includes(tag)) {
+      this.bulkValues.update(v => ({ ...v, tags: [...(v.tags || []), tag] }));
       this.newTagInput.set('');
     }
   }
 
   removeBulkTag(tag: string) {
-    this.bulkValues.update(v => ({ ...v, tags: v.tags.filter((t: string) => t !== tag) }));
+    this.bulkValues.update(v => ({ ...v, tags: v.tags?.filter((t: string) => t !== tag) || [] }));
   }
 
   // Validation
   validateBulkEdit() {
     const errors: { id: string; product: string; message: string }[] = [];
     
-    if (this.bulkValues().priceValue !== null && this.bulkValues().priceValue < 0) {
+    if (this.bulkValues().priceValue !== null && this.bulkValues().priceValue! < 0) {
       this.selectedProducts().forEach(p => {
         errors.push({
           id: p.id,
@@ -465,24 +363,20 @@ export class BulkOperations {
   }
 
   executeBulkEdit() {
-    this.isProcessing.set(true);
+    const ids = this.selectedProducts().map(p => p.id);
+    if (ids.length === 0) return;
     
-    setTimeout(() => {
-      this.isProcessing.set(false);
-      this.addToHistory({
-        id: 'hist_' + Date.now(),
-        type: 'edit',
-        title: 'Mass Edit - ' + this.selectedFields().join(', '),
-        description: `Updated ${this.selectedFields().length} fields on ${this.selectedCount()} products`,
-        icon: 'pencil-square',
-        status: 'completed',
-        timestamp: new Date(),
-        affectedCount: this.selectedCount(),
-        duration: 2.5,
-        canUndo: true
-      });
-      alert('Bulk edit completed successfully!');
-    }, 2000);
+    this.bulkOperationService.executeBulkEdit(
+      ids,
+      this.selectedFields(),
+      this.bulkValues()
+    ).subscribe({
+      next: () => {
+        alert('Bulk edit completed successfully!');
+        this.selectedProducts.set([]);
+      },
+      error: (err) => alert('Error: ' + err.message)
+    });
   }
 
   // Import Operations
@@ -509,46 +403,52 @@ export class BulkOperations {
   }
 
   generateImportPreview() {
-    // Mock preview data
-    this.importPreview.set([
-      { name: 'New Product 1', sku: 'NEW-001', status: 'valid' },
-      { name: 'New Product 2', sku: 'NEW-002', status: 'valid' },
-      { name: 'Existing Product', sku: 'WH-PRO-001', status: 'error' },
-      { name: 'New Product 3', sku: 'NEW-003', status: 'valid' },
-      { name: 'Invalid Data', sku: '', status: 'error' }
-    ]);
+    const file = this.uploadedFile();
+    if (!file) return;
+    
+    this.bulkOperationService.validateImport(file, this.importMode()).subscribe({
+      next: (preview) => {
+        this.importPreview.set(preview);
+      }
+    });
   }
 
   downloadTemplate(format: 'csv' | 'excel') {
-    console.log('Downloading', format, 'template');
-    alert(`Template download started for ${format.toUpperCase()}`);
+    this.bulkOperationService.downloadTemplate(format).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `product-template.${format}`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
   }
 
   validateImport() {
-    console.log('Validating import...');
-    alert('Validation complete! 3 valid rows, 2 errors found.');
+    const file = this.uploadedFile();
+    if (!file) return;
+    
+    this.bulkOperationService.validateImport(file, this.importMode()).subscribe({
+      next: (preview) => {
+        this.importPreview.set(preview);
+        const validCount = preview.filter(r => r.status === 'valid').length;
+        const errorCount = preview.filter(r => r.status === 'error').length;
+        alert(`Validation complete! ${validCount} valid rows, ${errorCount} errors found.`);
+      }
+    });
   }
 
   executeImport() {
-    this.isProcessing.set(true);
+    const file = this.uploadedFile();
+    if (!file) return;
     
-    setTimeout(() => {
-      this.isProcessing.set(false);
-      this.uploadedFile.set(null);
-      this.addToHistory({
-        id: 'hist_' + Date.now(),
-        type: 'import',
-        title: 'Product Import',
-        description: `Imported products via ${this.importMode()} mode`,
-        icon: 'upload',
-        status: 'completed',
-        timestamp: new Date(),
-        affectedCount: 125,
-        duration: 15.3,
-        canUndo: false
-      });
-      alert('Import completed successfully!');
-    }, 3000);
+    this.bulkOperationService.executeImport(file, this.importMode(), this.skipValidation()).subscribe({
+      next: () => {
+        this.uploadedFile.set(null);
+        this.importPreview.set([]);
+        alert('Import completed successfully!');
+      }
+    });
   }
 
   // Export Operations
@@ -566,24 +466,24 @@ export class BulkOperations {
   }
 
   executeExport() {
-    this.isProcessing.set(true);
+    const ids = this.selectedCount() > 0 ? this.selectedProducts().map(p => p.id) : 'all';
+    const fields = this.exportableFields().filter(f => f.selected).map(f => f.id);
     
-    setTimeout(() => {
-      this.isProcessing.set(false);
-      this.addToHistory({
-        id: 'hist_' + Date.now(),
-        type: 'export',
-        title: 'Product Export',
-        description: `Exported ${this.selectedExportFieldsCount()} fields to ${this.selectedFormat().toUpperCase()}`,
-        icon: 'download',
-        status: 'completed',
-        timestamp: new Date(),
-        affectedCount: this.selectedCount() || this.totalProductCount(),
-        duration: 5.2,
-        canUndo: false
-      });
-      alert('Export downloaded!');
-    }, 2000);
+    this.bulkOperationService.executeExport(
+      ids,
+      this.selectedFormat(),
+      fields,
+      this.exportOptions()
+    ).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `products-export.${this.selectedFormat()}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    });
   }
 
   // Copy Operations
@@ -601,78 +501,46 @@ export class BulkOperations {
   }
 
   executeCopy() {
-    this.isProcessing.set(true);
+    const ids = this.selectedProducts().map(p => p.id);
+    if (ids.length === 0) return;
     
-    setTimeout(() => {
-      this.isProcessing.set(false);
-      this.addToHistory({
-        id: 'hist_' + Date.now(),
-        type: 'copy',
-        title: 'Duplicate Products',
-        description: `Created ${this.selectedCount()} product copies`,
-        icon: 'copy',
-        status: 'completed',
-        timestamp: new Date(),
-        affectedCount: this.selectedCount(),
-        duration: 4.1,
-        canUndo: true
-      });
-      alert('Products duplicated successfully!');
-    }, 2500);
+    this.bulkOperationService.executeCopy(ids, this.copyOptions()).subscribe({
+      next: () => {
+        alert('Products duplicated successfully!');
+        this.selectedProducts.set([]);
+      }
+    });
   }
 
   // Delete Operations
   executeDelete() {
-    if (this.deleteOptions().archiveInstead) {
-      this.isProcessing.set(true);
-      setTimeout(() => {
-        this.isProcessing.set(false);
+    const ids = this.selectedProducts().map(p => p.id);
+    if (ids.length === 0) return;
+    
+    this.bulkOperationService.executeDelete(ids, this.deleteOptions()).subscribe({
+      next: () => {
         this.selectedProducts.set([]);
-        this.addToHistory({
-          id: 'hist_' + Date.now(),
-          type: 'delete',
-          title: 'Archive Products',
-          description: `Archived ${this.selectedCount()} products`,
-          icon: 'archive',
-          status: 'completed',
-          timestamp: new Date(),
-          affectedCount: this.selectedCount(),
-          duration: 1.5,
-          canUndo: true
-        });
-        alert('Products archived successfully!');
-      }, 1500);
-    } else {
-      this.isProcessing.set(true);
-      setTimeout(() => {
-        this.isProcessing.set(false);
-        this.selectedProducts.set([]);
-        this.addToHistory({
-          id: 'hist_' + Date.now(),
-          type: 'delete',
-          title: 'Delete Products',
-          description: `Permanently deleted ${this.selectedCount()} products`,
-          icon: 'trash3',
-          status: 'completed',
-          timestamp: new Date(),
-          affectedCount: this.selectedCount(),
-          duration: 2.0,
-          canUndo: false
-        });
-        alert('Products deleted permanently!');
-        this.router.navigate(['/products']);
-      }, 2000);
-    }
+        if (this.deleteOptions().archiveInstead) {
+          alert('Products archived successfully!');
+        } else {
+          alert('Products deleted permanently!');
+          this.router.navigate(['/products']);
+        }
+      }
+    });
   }
 
   // History Management
-  addToHistory(item: OperationHistoryItem) {
-    this.operationHistory.update(history => [item, ...history]);
+  undoOperation(id: string) {
+    this.bulkOperationService.undoOperation(id).subscribe({
+      next: () => alert('Undo operation initiated')
+    });
   }
 
-  undoOperation(id: string) {
-    console.log('Undoing operation:', id);
-    alert('Undo operation initiated');
+  clearHistory() {
+    if (confirm('Clear all operation history?')) {
+      this.bulkOperationService.clearHistory().subscribe();
+    }
   }
 
   // Settings

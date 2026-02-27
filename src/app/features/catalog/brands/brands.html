@@ -1,1 +1,518 @@
-<p>brands works!</p>
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header Section -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Brands</h1>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                        {{ filteredBrands().length }} brands
+                    </span>
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage product brands and manufacturers</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Search -->
+                <div class="relative">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" [(ngModel)]="searchQuery" placeholder="Search brands..."
+                        class="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-56">
+                </div>
+
+                <button (click)="toggleViewMode()"
+                    class="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm">
+                    <i class="bi bi-{{viewMode() === 'grid' ? 'list' : 'grid'}}"></i>
+                </button>
+
+                <app-dropdown label="Export" [items]="exportItems" [showChevron]="true"
+                    triggerClass="shadow-sm" (itemSelected)="onExport($event)">
+                </app-dropdown>
+
+                <button (click)="openModal()"
+                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5">
+                    <i class="bi bi-plus-lg"></i>
+                    <span class="hidden sm:inline">Add Brand</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            @for (stat of displayStats(); track stat.label) {
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter(stat.filter)">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{{ stat.label }}</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                            {{ stat.value }}
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors {{ stat.bgColor }}">
+                        <i class="bi bi-{{stat.icon}} {{stat.iconColor}} text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                        [class]="stat.trend >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                        {{ stat.trend >= 0 ? '+' : '' }}{{ stat.trend }}%
+                    </span>
+                    <span class="text-xs text-gray-400">vs last month</span>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Filters Bar -->
+        @if (filterStatus() || searchQuery()) {
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">Filters:</span>
+                @if (filterStatus()) {
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium flex items-center gap-1 capitalize">
+                    {{ filterStatus() }}
+                    <button (click)="filterStatus.set('')" class="hover:text-indigo-900">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </span>
+                }
+                @if (searchQuery()) {
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium flex items-center gap-1">
+                    "{{ searchQuery() }}"
+                    <button (click)="searchQuery.set('')" class="hover:text-indigo-900">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </span>
+                }
+            </div>
+            <button (click)="clearFilters()" class="text-sm text-gray-500 hover:text-gray-700">
+                Clear all
+            </button>
+        </div>
+        }
+
+        <!-- Loading State -->
+        @if (isLoading()) {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12">
+            <div class="flex flex-col items-center">
+                <i class="bi bi-arrow-repeat animate-spin text-3xl text-indigo-600 mb-4"></i>
+                <p class="text-gray-500">Loading brands...</p>
+            </div>
+        </div>
+        }
+
+        <!-- Grid View -->
+        @if (!isLoading() && viewMode() === 'grid') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @for (brand of filteredBrands(); track brand.id) {
+            <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden"
+                [class.ring-2]="isSelected(brand.id)" [class.ring-indigo-500]="isSelected(brand.id)">
+                
+                <!-- Header with Logo -->
+                <div class="p-5 border-b border-gray-100">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-3">
+                            <!-- Logo -->
+                            <div class="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                @if (brand.logo) {
+                                <img [src]="brand.logo" [alt]="brand.name" class="w-full h-full object-contain p-1">
+                                } @else {
+                                <span class="text-lg font-bold text-gray-600">{{ getInitials(brand.name) }}</span>
+                                }
+                            </div>
+                            <!-- Name & Status -->
+                            <div>
+                                <h3 class="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                    {{ brand.name }}
+                                </h3>
+                                <span class="text-xs text-gray-500">/{{ brand.slug }}</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" [checked]="isSelected(brand.id)"
+                            (change)="toggleSelection(brand.id)"
+                            class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-5">
+                    <p class="text-sm text-gray-600 line-clamp-2 h-10 mb-4">
+                        {{ brand.description || 'No description available' }}
+                    </p>
+                    
+                    <!-- Stats -->
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="flex items-center gap-1 text-gray-500">
+                            <i class="bi bi-box-seam"></i>
+                            {{ brand.productCount }} products
+                        </span>
+                        <span class="px-2 py-0.5 rounded text-xs font-medium {{ getStatusColor(brand.isActive) }}">
+                            {{ brand.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
+
+                    <!-- Featured Badge -->
+                    @if (brand.isFeatured) {
+                    <div class="mt-3">
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium">
+                            <i class="bi bi-star-fill"></i>
+                            Featured Brand
+                        </span>
+                    </div>
+                    }
+                </div>
+
+                <!-- Footer -->
+                <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    @if (brand.website) {
+                    <a [href]="brand.website" target="_blank"
+                        class="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                        <i class="bi bi-globe"></i>
+                        Website
+                    </a>
+                    } @else {
+                    <span></span>
+                    }
+                    <div class="flex gap-1">
+                        <button (click)="openModal(brand)"
+                            class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Edit Brand">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <app-dropdown icon="three-dots-vertical"
+                            [items]="getBrandMenuItems(brand)"
+                            triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0 shadow-none"
+                            menuClass="w-48" [showChevron]="false"
+                            (itemSelected)="onBrandAction($event, brand)">
+                        </app-dropdown>
+                    </div>
+                </div>
+            </div>
+            } @empty {
+            <div class="col-span-full py-12 text-center">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="bi bi-building text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">No brands found</h3>
+                    <p class="text-gray-500 mb-4">Try adjusting your filters or add a new brand</p>
+                    <button (click)="clearFilters()"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- List View -->
+        @if (!isLoading() && viewMode() === 'list') {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <!-- Bulk Actions -->
+            @if (selectedBrands().length > 0) {
+            <div class="bg-indigo-600 text-white px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="bi bi-check-square text-xl"></i>
+                    <span class="font-medium">{{ selectedBrands().length }} brands selected</span>
+                </div>
+                <div class="flex gap-2">
+                    <button (click)="bulkActivate()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm">
+                        Activate
+                    </button>
+                    <button (click)="bulkDeactivate()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm">
+                        Deactivate
+                    </button>
+                    <button (click)="bulkDelete()" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-sm">
+                        Delete
+                    </button>
+                </div>
+            </div>
+            }
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50/50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left w-12">
+                                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Brand
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Products
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Featured
+                            </th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @for (brand of filteredBrands(); track brand.id) {
+                        <tr class="group hover:bg-gray-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" [checked]="isSelected(brand.id)"
+                                    (change)="toggleSelection(brand.id)"
+                                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        @if (brand.logo) {
+                                        <img [src]="brand.logo" [alt]="brand.name" class="w-full h-full object-contain p-1">
+                                        } @else {
+                                        <span class="text-sm font-bold text-gray-600">{{ getInitials(brand.name) }}</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                            {{ brand.name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">/{{ brand.slug }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-medium text-gray-900">{{ brand.productCount }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ getStatusColor(brand.isActive) }}">
+                                    {{ brand.isActive ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (brand.isFeatured) {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                                    <i class="bi bi-star-fill"></i>
+                                    Featured
+                                </span>
+                                } @else {
+                                <span class="text-gray-400">-</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button (click)="openModal(brand)"
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                        title="Edit Brand">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <app-dropdown icon="three-dots-vertical"
+                                        [items]="getBrandMenuItems(brand)"
+                                        triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0"
+                                        menuClass="w-48" [showChevron]="false"
+                                        (itemSelected)="onBrandAction($event, brand)">
+                                    </app-dropdown>
+                                </div>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                        <i class="bi bi-building text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-1">No brands found</h3>
+                                    <p class="text-gray-500 mb-4">Try adjusting your filters</p>
+                                    <button (click)="clearFilters()"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        }
+
+    </div>
+</div>
+
+<!-- Brand Modal -->
+@if (showModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slide-up">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">
+                    {{ editingBrand() ? 'Edit Brand' : 'Add New Brand' }}
+                </h2>
+                <p class="text-sm text-gray-500">
+                    {{ editingBrand() ? 'Update brand details' : 'Create a new product brand' }}
+                </p>
+            </div>
+            <button (click)="closeModal()"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto max-h-[60vh]">
+            <form [formGroup]="brandForm" class="space-y-6">
+                <!-- Logo Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Brand Logo</label>
+                    <div class="flex items-center gap-4">
+                        <div class="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300"
+                            [class.border-indigo-500]="previewImage()">
+                            @if (previewImage()) {
+                            <img [src]="previewImage()" alt="Preview" class="w-full h-full object-contain p-2">
+                            } @else {
+                            <i class="bi bi-image text-gray-400 text-2xl"></i>
+                            }
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <input type="file" accept="image/*" (change)="onLogoSelected($event)" class="hidden" #logoInput>
+                            <button type="button" (click)="logoInput.click()"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                {{ previewImage() ? 'Change Logo' : 'Upload Logo' }}
+                            </button>
+                            @if (previewImage()) {
+                            <button type="button" (click)="removeLogo()"
+                                class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                                Remove
+                            </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Brand Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" formControlName="name" (input)="generateSlug()"
+                            placeholder="e.g., Nike, Apple, Samsung"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            [class.border-red-300]="brandForm.get('name')?.invalid && brandForm.get('name')?.touched">
+                        @if (brandForm.get('name')?.invalid && brandForm.get('name')?.touched) {
+                        <p class="mt-1 text-sm text-red-600 flex items-center gap-1">
+                            <i class="bi bi-exclamation-circle"></i>
+                            Name is required
+                        </p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            URL Slug <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">/</span>
+                            <input type="text" formControlName="slug"
+                                placeholder="brand-name"
+                                class="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm"
+                                [class.border-red-300]="brandForm.get('slug')?.invalid && brandForm.get('slug')?.touched">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Website
+                        </label>
+                        <div class="relative">
+                            <i class="bi bi-globe absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="url" formControlName="website"
+                                placeholder="https://example.com"
+                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea formControlName="description" rows="3"
+                        placeholder="Brief description of the brand..."
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Settings -->
+                <div class="border-t border-gray-100 pt-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="bi bi-gear text-indigo-600"></i>
+                        Settings
+                    </h3>
+                    <div class="flex flex-wrap gap-6">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" formControlName="isActive"
+                                class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="text-sm font-medium text-gray-900">Active</span>
+                                <p class="text-xs text-gray-500">Brand is visible on store</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" formControlName="isFeatured"
+                                class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="text-sm font-medium text-gray-900">Featured</span>
+                                <p class="text-xs text-gray-500">Show in featured brands section</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="border-t border-gray-100 pt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Sort Order
+                    </label>
+                    <input type="number" formControlName="sortOrder" min="0"
+                        class="w-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    <p class="mt-1 text-xs text-gray-500">Lower numbers appear first</p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+            @if (editingBrand()) {
+            <button type="button" (click)="deleteBrand(editingBrand()!)"
+                class="px-4 py-2.5 text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2">
+                <i class="bi bi-trash3"></i>
+                Delete
+            </button>
+            } @else {
+            <div></div>
+            }
+            <div class="flex items-center gap-3">
+                <button type="button" (click)="closeModal()"
+                    class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button type="button" (click)="saveBrand()" [disabled]="brandForm.invalid || isSaving()"
+                    class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                    @if (isSaving()) {
+                    <i class="bi bi-arrow-repeat spin"></i>
+                    <span>Saving...</span>
+                    } @else {
+                    <i class="bi bi-check-lg"></i>
+                    <span>{{ editingBrand() ? 'Update' : 'Create' }} Brand</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}
