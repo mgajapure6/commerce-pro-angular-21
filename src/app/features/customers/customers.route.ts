@@ -11,6 +11,14 @@ export const CUSTOMERS_ROUTES: Routes = [
     loadComponent: () => import('./customer-list/customer-list').then(m => m.CustomerList)
   },
   {
+    path: 'add',
+    loadComponent: () => import('./customer-form/customer-form').then(m => m.CustomerForm)
+  },
+  {
+    path: 'edit/:id',
+    loadComponent: () => import('./customer-form/customer-form').then(m => m.CustomerForm)
+  },
+  {
     path: 'segments',
     loadComponent: () => import('./segments/segments').then(m => m.Segments)
   },

@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, signal, computed, inject, Input } from '@angular/core';
+import { Component, Output, EventEmitter, signal, computed, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
@@ -105,7 +105,7 @@ interface MenuItem {
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss'
 })
-export class Sidebar {
+export class Sidebar implements OnInit {
   @Input() isOpen = true;
   @Output() close = new EventEmitter<void>();
   @Output() collapseChange = new EventEmitter<boolean>();
@@ -775,6 +775,22 @@ export class Sidebar {
   );
 
   isMenuExpanded = (id: string) => this.expandedMenu() === id;
+
+  ngOnInit(): void {
+    // Auto-expand menu based on current route
+    this.expandForRoute(this.router.url);
+
+    // Listen to route changes to update active menu and auto-expand
+    this.router.events.subscribe(() => {
+      this.expandForRoute(this.router.url);
+    });
+    // // Close drawer on route change (for mobile)
+    this.router.events.subscribe(() => {
+      if (this.isOpen) {
+        this.closeDrawer();
+      }
+    });
+  }
 
   toggleCollapse() {
     this._isCollapsed.update(v => !v);

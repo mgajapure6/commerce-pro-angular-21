@@ -84,6 +84,7 @@
                     <a 
                       [routerLink]="child.route"
                       routerLinkActive="bg-indigo-50 text-indigo-600 font-medium"
+                      [routerLinkActiveOptions]="{ exact: true }"
                       class="flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-lg transition-colors">
                       <span class="truncate">{{ child.label }}</span>
                       @if (child.badge) {

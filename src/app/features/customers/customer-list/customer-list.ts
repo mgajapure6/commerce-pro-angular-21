@@ -53,6 +53,9 @@ interface Customer {
   templateUrl: './customer-list.html'
 })
 export class CustomerList implements OnInit {
+  // expose global Math for template
+  readonly Math: typeof Math = Math;
+  
   // View State
   viewMode = signal<'table' | 'grid'>('table');
   showFilters = signal(false);

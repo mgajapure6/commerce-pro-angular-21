@@ -13,7 +13,7 @@
                     <p class="text-xs text-gray-500">Products available</p>
                 </div>
             </div>
-            <span class="text-2xl font-bold text-green-600">{{ stats().inStock }}</span>
+            <span class="text-2xl font-bold text-green-600">{{ stats() }}</span>
         </div>
 
         <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-100">
@@ -26,7 +26,7 @@
                     <p class="text-xs text-gray-500">Below 10 units</p>
                 </div>
             </div>
-            <span class="text-2xl font-bold text-yellow-600">{{ stats().lowStock }}</span>
+            <span class="text-2xl font-bold text-yellow-600">{{ stats() }}</span>
         </div>
 
         <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
@@ -39,7 +39,7 @@
                     <p class="text-xs text-gray-500">Needs restocking</p>
                 </div>
             </div>
-            <span class="text-2xl font-bold text-red-600">{{ stats().outOfStock }}</span>
+            <span class="text-2xl font-bold text-red-600">{{ stats() }}</span>
         </div>
     </div>
 

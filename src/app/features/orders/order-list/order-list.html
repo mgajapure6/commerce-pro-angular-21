@@ -32,11 +32,9 @@
 
         <app-dropdown 
         label="Export" 
-        position="right" 
         [items]="exportItems" 
         [showChevron]="true"
         triggerClass="shadow-sm" 
-        position="bottom"
         (itemSelected)="onExport($event)">
         </app-dropdown>
 
@@ -507,7 +505,6 @@
               </a>
               <app-dropdown
                 icon="three-dots-vertical"
-                position="left"
                 [items]="getOrderMenuItems(order)"
                 triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0 shadow-none"
                 menuClass="w-48"

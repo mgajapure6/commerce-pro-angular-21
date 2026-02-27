@@ -30,7 +30,7 @@
                     <i class="bi bi-{{viewMode() === 'table' ? 'grid' : 'list'}}"></i>
                 </button>
 
-                <app-dropdown label="Export" icon="download" position="auto" align="end" [items]="[
+                <app-dropdown label="Export" icon="download" align="end" [items]="[
             { id: 'csv', label: 'Export as CSV', icon: 'filetype-csv' },
             { id: 'excel', label: 'Export as Excel', icon: 'filetype-xlsx' },
             { id: 'pdf', label: 'Export as PDF', icon: 'filetype-pdf' }
@@ -372,7 +372,7 @@
                                         title="View Profile">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <app-dropdown icon="three-dots-vertical" position="auto" align="end"
+                                    <app-dropdown icon="three-dots-vertical" align="end"
                                         [items]="getCustomerMenuItems(customer)"
                                         triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0 shadow-none"
                                         menuClass="w-52" 
@@ -447,7 +447,158 @@
         </div>
         } @else {
         <!-- Grid View -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @for (customer of paginatedCustomers(); track customer.id) {
+            <div
+                class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                [class.ring-2]="isSelected(customer.id)" [class.ring-indigo-500]="isSelected(customer.id)">
 
+                <!-- Header -->
+                <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" [checked]="isSelected(customer.id)" (change)="toggleSelection(customer.id)"
+                            class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="font-mono text-xs text-gray-500">{{ customer.customerNumber }}</span>
+                    </div>
+                    <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ getStatusColor(customer.status) }}">
+                        <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ getStatusDot(customer.status) }}"></span>
+                        {{ customer.status | titlecase }}
+                    </span>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="p-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img [src]="customer.avatar" [alt]="getFullName(customer)"
+                            class="w-14 h-14 rounded-full object-cover bg-gray-100">
+                        <div class="flex-1 min-w-0">
+                            <a [routerLink]="['/customers', customer.id]"
+                                class="font-semibold text-gray-900 hover:text-indigo-600 transition-colors block truncate">
+                                {{ getFullName(customer) }}
+                            </a>
+                            <p class="text-sm text-gray-500 truncate">{{ customer.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Type Badge -->
+                    <div class="mb-4">
+                        <span
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ getTypeColor(customer.type) }}">
+                            <i class="bi bi-{{getCustomerTypeIcon(customer.type)}} mr-1"></i>
+                            {{ customer.type | titlecase }}
+                        </span>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-gray-50 rounded-xl p-3">
+                            <p class="text-xs text-gray-500 mb-1">Orders</p>
+                            <p class="text-lg font-bold text-gray-900">{{ customer.totalOrders }}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3">
+                            <p class="text-xs text-gray-500 mb-1">Total Spent</p>
+                            <p class="text-lg font-bold text-gray-900">${{ customer.totalSpent | number:'1.0-0' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Average Order Value -->
+                    <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                        <span class="text-sm text-gray-500">Avg. Order Value</span>
+                        <span class="font-semibold text-gray-900">${{ customer.averageOrderValue | number:'1.0-0' }}</span>
+                    </div>
+
+                    <!-- Tags -->
+                    @if (customer.tags.length > 0) {
+                    <div class="flex flex-wrap gap-1 mb-4">
+                        @for (tag of customer.tags.slice(0, 3); track tag) {
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg">{{ tag }}</span>
+                        }
+                        @if (customer.tags.length > 3) {
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg">+{{ customer.tags.length - 3 }}</span>
+                        }
+                    </div>
+                    }
+
+                    <!-- Contact & Last Order -->
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="bi bi-telephone text-gray-400"></i>
+                            <span>{{ customer.phone }}</span>
+                        </div>
+                        @if (customer.lastOrderDate) {
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="bi bi-bag text-gray-400"></i>
+                            <span>Last order {{ getTimeAgo(customer.lastOrderDate) }}</span>
+                        </div>
+                        } @else {
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            <i class="bi bi-bag"></i>
+                            <span>No orders yet</span>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Marketing Consent -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-2 text-sm" [class]="customer.marketingConsent ? 'text-green-600' : 'text-gray-400'">
+                            <i class="bi bi-{{customer.marketingConsent ? 'envelope-check' : 'envelope-slash'}}"></i>
+                            <span>{{ customer.marketingConsent ? 'Subscribed' : 'Unsubscribed' }}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <a [routerLink]="['/customers', customer.id]"
+                                class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <app-dropdown
+                                icon="three-dots-vertical"
+                                [items]="getCustomerMenuItems(customer)"
+                                triggerClass="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg border-0 shadow-none"
+                                menuClass="w-52"
+                                [showChevron]="false"
+                                (itemSelected)="onCustomerAction($event, customer)">
+                            </app-dropdown>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            } @empty {
+            <div class="col-span-full py-12 text-center">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="bi bi-people text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">No customers found</h3>
+                    <p class="text-gray-500 mb-4">Try adjusting your filters or search query</p>
+                    <button (click)="clearAllFilters()"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Grid Pagination -->
+        @if (filteredCustomers().length > 0) {
+        <div class="flex items-center justify-between pt-6">
+            <span class="text-sm text-gray-500">
+                Showing {{ (currentPage() - 1) * itemsPerPage() + 1 }} -
+                {{ Math.min(currentPage() * itemsPerPage(), filteredCustomers().length) }} of {{ filteredCustomers().length }}
+            </span>
+            <div class="flex items-center gap-2">
+                <button (click)="previousPage()" [disabled]="currentPage() === 1"
+                    class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Previous
+                </button>
+                <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                    class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Next
+                </button>
+            </div>
+        </div>
         }
+        }
+
     </div>
 </div>
