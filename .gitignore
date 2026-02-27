@@ -6,8 +6,14 @@
 /out-tsc
 /bazel-out
 
+# angular
+.angular/*
+
 # Node
 /node_modules
+/admin-application/node_modules
+admin-application/node_modules
+/customer-application/node_modules
 npm-debug.log
 yarn-error.log
 
@@ -22,6 +28,8 @@ yarn-error.log
 
 # Visual Studio Code
 .vscode/*
+admin-application/.vscode/*
+customer-application/.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -29,9 +37,16 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
+admin-application/!.vscode/settings.json
+admin-application/!.vscode/tasks.json
+admin-application/!.vscode/launch.json
+admin-application/!.vscode/extensions.json
+admin-application/!.vscode/mcp.json
+admin-application/.history/*
+
 # Miscellaneous
-/.angular/cache
-.sass-cache/
+admin-application/.angular/cache
+admin-application/.sass-cache/
 /connect.lock
 /coverage
 /libpeerconnection.log
