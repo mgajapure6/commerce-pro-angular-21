@@ -216,7 +216,7 @@ export class Sidebar implements OnInit {
       'menu.inventory.overview': 'Stock Overview',
       'menu.inventory.warehouses': 'Warehouses',
       'menu.inventory.transfers': 'Stock Transfers',
-      'menu.inventory.adjustments': 'Adjustments',
+      'menu.inventory.adjustments': 'Stock Adjustments',
       'menu.inventory.low_stock': 'Low Stock Alerts',
       'menu.inventory.forecasting': 'Demand Forecasting',
       'menu.inventory.valuation': 'Inventory Valuation',

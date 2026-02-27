@@ -1,1 +1,743 @@
-<p>valuation works!</p>
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header -->
+        <div
+            class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Inventory Valuation</h1>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">
+                        {{ filteredValuations().length }} products
+                    </span>
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage FIFO, LIFO, Weighted Average, and Specific ID valuation
+                    methods</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button (click)="showFilters.set(!showFilters())"
+                    class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-funnel"></i>
+                    Filters
+                </button>
+
+                <button (click)="compareMethods()"
+                    class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-arrow-left-right"></i>
+                    Compare Methods
+                </button>
+
+                <button (click)="exportValuations()"
+                    class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-download"></i>
+                    Export
+                </button>
+
+                <button (click)="recalculateValuations()"
+                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200">
+                    <i class="bi bi-calculator"></i>
+                    Recalculate
+                </button>
+            </div>
+        </div>
+
+        <!-- Financial Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-currency-dollar text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Inventory Value</p>
+                    <p class="text-xl font-bold text-gray-900">{{ formatCurrency(summary().totalInventoryValue) }}</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-cart-dash text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total COGS</p>
+                    <p class="text-xl font-bold text-gray-900">{{ formatCurrency(summary().totalCOGS) }}</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-graph-up-arrow text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Gross Margin</p>
+                    <p class="text-xl font-bold text-gray-900">{{ summary().grossMargin }}%</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <i class="bi bi-arrow-repeat text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Inventory Turnover</p>
+                    <p class="text-xl font-bold text-gray-900">{{ summary().inventoryTurnover }}x</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Method Distribution & Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter('fifo')">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">FIFO</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().fifoCount }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-100">
+                        <i class="bi bi-arrow-down-circle text-blue-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">First-In, First-Out</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter('lifo')">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">LIFO</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().lifoCount }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-100">
+                        <i class="bi bi-arrow-up-circle text-purple-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Last-In, First-Out</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter('weighted')">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Weighted Avg</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().weightedCount }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-green-100">
+                        <i class="bi bi-calculator text-green-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Average Cost Method</span>
+                </div>
+            </div>
+
+            <div
+                class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Specific ID</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().specificCount }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-orange-100">
+                        <i class="bi bi-fingerprint text-orange-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Individual Tracking</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter('high-value')">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">High Value</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().highValue }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-yellow-100">
+                        <i class="bi bi-gem text-yellow-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">>$10,000 value</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                (click)="applyQuickFilter('increasing')">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Value Up</p>
+                        <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{
+                            stats().increasing }}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-green-100">
+                        <i class="bi bi-trending-up text-green-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Increasing value</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Method Value Breakdown -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <h3 class="font-semibold text-gray-900 mb-4">Valuation Method Breakdown by Value</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="bi bi-arrow-down-circle text-blue-600"></i>
+                        <span class="font-medium text-gray-900">FIFO</span>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-700">{{ formatCurrency(summary().methodBreakdown.fifo) }}</p>
+                    <p class="text-xs text-blue-600 mt-1">{{ (summary().methodBreakdown.fifo /
+                        summary().totalInventoryValue * 100).toFixed(1) }}% of total</p>
+                </div>
+                <div class="p-4 bg-purple-50 rounded-xl border border-purple-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="bi bi-arrow-up-circle text-purple-600"></i>
+                        <span class="font-medium text-gray-900">LIFO</span>
+                    </div>
+                    <p class="text-2xl font-bold text-purple-700">{{ formatCurrency(summary().methodBreakdown.lifo) }}
+                    </p>
+                    <p class="text-xs text-purple-600 mt-1">{{ (summary().methodBreakdown.lifo /
+                        summary().totalInventoryValue * 100).toFixed(1) }}% of total</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="bi bi-calculator text-green-600"></i>
+                        <span class="font-medium text-gray-900">Weighted Avg</span>
+                    </div>
+                    <p class="text-2xl font-bold text-green-700">{{
+                        formatCurrency(summary().methodBreakdown.weighted_average) }}</p>
+                    <p class="text-xs text-green-600 mt-1">{{ (summary().methodBreakdown.weighted_average /
+                        summary().totalInventoryValue * 100).toFixed(1) }}% of total</p>
+                </div>
+                <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="bi bi-fingerprint text-orange-600"></i>
+                        <span class="font-medium text-gray-900">Specific ID</span>
+                    </div>
+                    <p class="text-2xl font-bold text-orange-700">{{
+                        formatCurrency(summary().methodBreakdown.specific_identification) }}</p>
+                    <p class="text-xs text-orange-600 mt-1">{{ (summary().methodBreakdown.specific_identification /
+                        summary().totalInventoryValue * 100).toFixed(1) }}% of total</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Panel -->
+        @if (showFilters()) {
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm animate-slide-down">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-funnel-fill text-indigo-600"></i>
+                    Advanced Filters
+                </h3>
+                <button (click)="clearFilters()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Clear
+                    all</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Products</label>
+                    <div class="relative">
+                        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name, SKU, or supplier..."
+                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div class="relative">
+                        <select [(ngModel)]="filterCategory"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer pr-10">
+                            <option value="">All Categories</option>
+                            @for (cat of categories(); track cat) {
+                            <option [value]="cat">{{ cat }}</option>
+                            }
+                        </select>
+                        <i
+                            class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Valuation Method -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valuation Method</label>
+                    <div class="relative">
+                        <select [(ngModel)]="filterMethod"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer pr-10">
+                            <option value="">All Methods</option>
+                            <option value="fifo">FIFO</option>
+                            <option value="lifo">LIFO</option>
+                            <option value="weighted_average">Weighted Average</option>
+                            <option value="specific_identification">Specific Identification</option>
+                        </select>
+                        <i
+                            class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <div class="relative">
+                        <select [(ngModel)]="filterStatus"
+                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none cursor-pointer pr-10">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="pending_review">Pending Review</option>
+                            <option value="deprecated">Deprecated</option>
+                        </select>
+                        <i
+                            class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Valuations Table -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50/50 border-b border-gray-100">
+                        <tr>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Product</th>
+                            <th
+                                class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Method</th>
+                            <th
+                                class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Quantity</th>
+                            <th
+                                class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Avg Unit Cost</th>
+                            <th
+                                class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Total Value</th>
+                            <th
+                                class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                COGS</th>
+                            <th
+                                class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Turnover</th>
+                            <th
+                                class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Variance</th>
+                            <th
+                                class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @for (valuation of filteredValuations(); track valuation.id) {
+                        <tr class="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                            (click)="viewValuationDetail(valuation)">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <img [src]="valuation.product.image" [alt]="valuation.product.name"
+                                        class="w-12 h-12 rounded-xl object-cover bg-gray-100">
+                                    <div>
+                                        <p
+                                            class="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                            {{ valuation.product.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ valuation.product.sku }} • {{
+                                            valuation.product.category }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border"
+                                    [class]="getMethodColor(valuation.currentMethod)">
+                                    <i class="bi mr-1" [class]="getMethodConfig(valuation.currentMethod).icon"></i>
+                                    {{ getMethodName(valuation.currentMethod) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ formatNumber(valuation.totalQuantity)
+                                    }}</span>
+                                <p class="text-xs text-gray-500">{{ valuation.daysInInventory }} days avg</p>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(valuation.avgUnitCost)
+                                    }}</span>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(valuation.totalValue)
+                                    }}</span>
+                                <div class="w-20 h-1 bg-gray-200 rounded-full ml-auto mt-1 overflow-hidden">
+                                    <div class="h-full bg-indigo-500 rounded-full"
+                                        [style.width.%]="Math.min((valuation.totalValue / 20000) * 100, 100)"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(valuation.cogs)
+                                    }}</span>
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                <span class="text-sm font-medium" [class.text-green-600]="valuation.turnoverRatio > 6"
+                                    [class.text-yellow-600]="valuation.turnoverRatio >= 4 && valuation.turnoverRatio <= 6"
+                                    [class.text-red-600]="valuation.turnoverRatio < 4">
+                                    {{ valuation.turnoverRatio }}x
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                @if (valuation.variance && valuation.variance !== 0) {
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium"
+                                    [class]="getVarianceColor(valuation.variance)">
+                                    <i class="bi mr-1" [class]="getVarianceIcon(valuation.variance)"></i>
+                                    {{ valuation.variance > 0 ? '+' : '' }}{{ valuation.variancePercentage }}%
+                                </span>
+                                } @else {
+                                <span class="text-xs text-gray-400">-</span>
+                                }
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button (click)="$event.stopPropagation(); viewValuationDetail(valuation)"
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                        title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button (click)="$event.stopPropagation(); changeMethod()"
+                                        class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Change Method">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    </button>
+                                    <button
+                                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="9" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div
+                                        class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                        <i class="bi bi-calculator text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-1">No valuations found</h3>
+                                    <p class="text-gray-500 mb-4">Try adjusting your filters or recalculate valuations
+                                    </p>
+                                    <button (click)="clearFilters()"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                        Clear Filters
+                                    </button>
+                                </div>
+                            </td>
+                            }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Carrying Cost Analysis -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <h3 class="font-semibold text-gray-900 mb-4">Inventory Carrying Cost Analysis</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Storage Costs</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.05)
+                            }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Insurance</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.02)
+                            }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Labor & Handling</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.03)
+                            }}</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Opportunity Cost</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.08)
+                            }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Depreciation</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.04)
+                            }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <span class="text-sm text-gray-600">Taxes</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(summary().totalInventoryValue * 0.01)
+                            }}</span>
+                    </div>
+                </div>
+                <div
+                    class="flex flex-col justify-center items-center p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <p class="text-sm text-indigo-600 mb-1">Total Carrying Cost</p>
+                    <p class="text-3xl font-bold text-indigo-700">{{ formatCurrency(summary().totalInventoryValue *
+                        0.23) }}</p>
+                    <p class="text-xs text-indigo-500 mt-2">23% of inventory value annually</p>
+                    <p class="text-xs text-indigo-400 mt-1">Industry average: 25-30%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Method Comparison Modal -->
+@if (showMethodComparison()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">Valuation Methods Comparison</h2>
+            <button (click)="showMethodComparison.set(false)"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto max-h-[70vh]">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                @for (method of valuationMethods; track method.method) {
+                <div class="p-4 rounded-xl border-2 cursor-pointer transition-all"
+                    [class.border-indigo-600]="methodForm.get('method')?.value === method.method"
+                    [class.bg-indigo-50]="methodForm.get('method')?.value === method.method"
+                    [class.border-gray-200]="methodForm.get('method')?.value !== method.method"
+                    (click)="methodForm.patchValue({ method: method.method })">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" [class]="method.color">
+                            <i class="bi" [class]="method.icon"></i>
+                        </div>
+                        <span class="font-semibold text-gray-900">{{ method.name }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">{{ method.description }}</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-xs">
+                            <i class="bi bi-check-circle text-green-600"></i>
+                            <span class="text-gray-700">{{ method.bestFor[0] }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <i class="bi bi-info-circle text-blue-600"></i>
+                            <span class="text-gray-500">{{ method.taxImplication }}</span>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium text-gray-700">Aspect</th>
+                            <th class="px-4 py-3 text-center font-medium text-blue-700">FIFO</th>
+                            <th class="px-4 py-3 text-center font-medium text-purple-700">LIFO</th>
+                            <th class="px-4 py-3 text-center font-medium text-green-700">Weighted Avg</th>
+                            <th class="px-4 py-3 text-center font-medium text-orange-700">Specific ID</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-gray-900">COGS during inflation</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Lower (older costs)</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Higher (recent costs)</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Moderate (average)</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Exact actual cost</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-gray-900">Ending inventory value</td>
+                            <td class="px-4 py-3 text-center text-green-600">Higher (recent costs)</td>
+                            <td class="px-4 py-3 text-center text-red-600">Lower (older costs)</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Moderate</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Exact remaining cost</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-gray-900">Taxable income</td>
+                            <td class="px-4 py-3 text-center text-red-600">Higher</td>
+                            <td class="px-4 py-3 text-center text-green-600">Lower</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Moderate</td>
+                            <td class="px-4 py-3 text-center text-gray-600">Varies</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-gray-900">IFRS compliance</td>
+                            <td class="px-4 py-3 text-center text-green-600"><i class="bi bi-check-lg"></i> Allowed</td>
+                            <td class="px-4 py-3 text-center text-red-600"><i class="bi bi-x-lg"></i> Not allowed</td>
+                            <td class="px-4 py-3 text-center text-green-600"><i class="bi bi-check-lg"></i> Allowed</td>
+                            <td class="px-4 py-3 text-center text-green-600"><i class="bi bi-check-lg"></i> Allowed</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-gray-900">Complexity</td>
+                            <td class="px-4 py-3 text-center text-yellow-600">Moderate</td>
+                            <td class="px-4 py-3 text-center text-red-600">High</td>
+                            <td class="px-4 py-3 text-center text-green-600">Low</td>
+                            <td class="px-4 py-3 text-center text-red-600">Very High</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="showMethodComparison.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Change Method Modal -->
+@if (showMethodModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">Change Valuation Method</h2>
+            <button (click)="showMethodModal.set(false)"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form [formGroup]="methodForm" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select New Method</label>
+                <div class="space-y-2">
+                    @for (method of valuationMethods; track method.method) {
+                    <button type="button" (click)="methodForm.patchValue({ method: method.method })"
+                        class="w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3"
+                        [class.border-indigo-600]="methodForm.get('method')?.value === method.method"
+                        [class.bg-indigo-50]="methodForm.get('method')?.value === method.method"
+                        [class.border-gray-200]="methodForm.get('method')?.value !== method.method">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" [class]="method.color">
+                            <i class="bi" [class]="method.icon"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ method.name }}</p>
+                            <p class="text-xs text-gray-500">{{ method.description }}</p>
+                        </div>
+                        @if (methodForm.get('method')?.value === method.method) {
+                        <i class="bi bi-check-circle-fill text-indigo-600 text-xl"></i>
+                        }
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Effective Date</label>
+                <input type="date" formControlName="effectiveDate"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Change</label>
+                <textarea formControlName="reason" rows="2" placeholder="e.g., Tax optimization, IFRS compliance..."
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+            </div>
+
+            <label
+                class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                <input type="checkbox" formControlName="applyToAll"
+                    class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <span class="text-sm font-medium text-gray-900">Apply to all products in category</span>
+            </label>
+        </form>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="showMethodModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="confirmMethodChange()" [disabled]="methodForm.invalid"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                Confirm Change
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Export Modal -->
+@if (showExportModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up text-center">
+        <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-download text-indigo-600 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Export Valuations</h3>
+        <p class="text-gray-500 mb-6">Download inventory valuation reports for accounting and audit purposes</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <button (click)="confirmExport()"
+                class="p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group">
+                <i class="bi bi-filetype-csv text-2xl text-gray-400 group-hover:text-indigo-600 mb-2 block"></i>
+                <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">CSV Export</span>
+            </button>
+            <button (click)="confirmExport()"
+                class="p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group">
+                <i class="bi bi-filetype-xlsx text-2xl text-gray-400 group-hover:text-indigo-600 mb-2 block"></i>
+                <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">Excel Report</span>
+            </button>
+            <button (click)="confirmExport()"
+                class="p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group">
+                <i class="bi bi-filetype-pdf text-2xl text-gray-400 group-hover:text-indigo-600 mb-2 block"></i>
+                <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">PDF Report</span>
+            </button>
+            <button (click)="confirmExport()"
+                class="p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group">
+                <i class="bi bi-file-earmark-text text-2xl text-gray-400 group-hover:text-indigo-600 mb-2 block"></i>
+                <span class="text-sm font-medium text-gray-700 group-hover:text-indigo-700">QuickBooks</span>
+            </button>
+        </div>
+
+        <button (click)="showExportModal.set(false)"
+            class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+            Cancel
+        </button>
+    </div>
+</div>
+}
+
+<!-- Recalculate Confirmation Modal -->
+@if (showRecalculateModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up text-center">
+        <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-calculator text-yellow-600 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Recalculate All Valuations?</h3>
+        <p class="text-gray-500 mb-6">
+            This will recalculate inventory values using current cost layers and selected valuation methods.
+            This action may affect financial reports and tax calculations.
+        </p>
+        <div class="flex gap-3 justify-center">
+            <button (click)="showRecalculateModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="confirmRecalculate()"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                <i class="bi bi-calculator mr-2"></i>
+                Recalculate
+            </button>
+        </div>
+    </div>
+</div>
+}

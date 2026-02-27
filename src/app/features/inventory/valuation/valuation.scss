@@ -1,0 +1,200 @@
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+}
+
+// Custom scrollbar
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+}
+
+// Button interactions
+button {
+    transition: all 0.2s ease;
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+}
+
+// Table row hover enhancement
+tr {
+    transition: background-color 0.15s ease;
+}
+
+// Focus ring for accessibility
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+// Card hover effects
+.bg-white {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        &.shadow-sm {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    }
+}
+
+// Progress bar animation
+.h-full {
+    transition: width 0.5s ease-out;
+}
+
+// Modal backdrop
+.fixed.inset-0 {
+    backdrop-filter: blur(4px);
+}
+
+// Method card selection
+.method-card {
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        border-color: #6366f1;
+        background-color: #eef2ff;
+    }
+}
+
+// Comparison table styling
+.comparison-table {
+    th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
+
+    td {
+        vertical-align: middle;
+    }
+}
+
+// Value bar animation
+.value-bar {
+    transition: width 0.5s ease-out;
+    background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+}
+
+// Variance indicator
+.variance-indicator {
+    transition: all 0.3s ease;
+
+    &.positive {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    }
+
+    &.negative {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    }
+}
+
+// Cost layer visualization
+.cost-layer {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+        border-radius: 2px;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .grid-cols-6 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lg\:col-span-2 {
+        grid-column: span 1 / span 1;
+    }
+
+    .comparison-table {
+        font-size: 0.75rem;
+    }
+}
+
+// Print styles for reports
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .shadow-sm,
+    .shadow-lg {
+        box-shadow: none !important;
+    }
+
+    .bg-gray-50\/50 {
+        background: white !important;
+    }
+}

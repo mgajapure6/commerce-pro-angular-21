@@ -1,3 +1,4 @@
+// Animations
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -32,6 +33,18 @@
     }
 }
 
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
 .animate-fade-in {
     animation: fadeIn 0.2s ease-out;
 }
@@ -45,7 +58,11 @@
     overflow: hidden;
 }
 
-// Custom scrollbar for modals
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Custom scrollbar
 .overflow-y-auto {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
@@ -62,4 +79,35 @@
         background-color: #cbd5e1;
         border-radius: 20px;
     }
+}
+
+// Focus styles for scan input
+input[autofocus] {
+    &:focus {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+}
+
+// Table row hover enhancement
+tr {
+    transition: all 0.15s ease;
+}
+
+// Button transitions
+button {
+    transition: all 0.2s ease;
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+// Status badge animations
+span[class*="bg-"] {
+    transition: all 0.2s ease;
+}
+
+// Progress bar animation
+[class*="bg-indigo-600"] {
+    transition: width 0.5s ease;
 }

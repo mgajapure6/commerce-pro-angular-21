@@ -21,15 +21,15 @@
     }
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    50% {
+        opacity: 0.5;
     }
 }
 
@@ -41,8 +41,8 @@
     animation: slideUp 0.3s ease-out;
 }
 
-.animate-slide-down {
-    animation: slideDown 0.3s ease-out;
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 // Custom scrollbar
@@ -73,6 +73,31 @@ button {
     }
 }
 
+// Route visualization line
+.h-1 {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: repeating-linear-gradient(to right,
+                #e5e7eb 0,
+                #e5e7eb 10px,
+                transparent 10px,
+                transparent 15px);
+        transform: translateY(-50%);
+    }
+}
+
+// Status badge transitions
+span[class*="bg-"] {
+    transition: all 0.2s ease;
+}
+
 // Table row hover enhancement
 tr {
     transition: background-color 0.15s ease;
@@ -97,43 +122,20 @@ textarea:focus {
     }
 }
 
-// Progress bar animation
-.h-full {
-    transition: width 0.5s ease-out;
-}
-
-// Checkbox styling
-input[type="checkbox"] {
-    cursor: pointer;
-}
-
-// Modal backdrop
-.fixed.inset-0 {
-    backdrop-filter: blur(4px);
+// Priority urgent animation
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 // Responsive adjustments
 @media (max-width: 768px) {
-    .grid-cols-6 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .max-w-3xl.mx-auto {
+        flex-direction: column;
+        gap: 1rem;
     }
 
-    .lg\:col-span-2 {
-        grid-column: span 1 / span 1;
+    .flex-1.max-w-xs {
+        max-width: 100%;
+        order: -1;
     }
-}
-
-// Chart container (for future chart.js integration)
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
-
-// Forecast confidence interval styling
-.confidence-band {
-    background: linear-gradient(to right,
-            rgba(99, 102, 241, 0.1) 0%,
-            rgba(99, 102, 241, 0.2) 50%,
-            rgba(99, 102, 241, 0.1) 100%);
 }

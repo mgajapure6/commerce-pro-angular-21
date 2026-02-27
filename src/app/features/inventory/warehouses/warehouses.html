@@ -1,1 +1,528 @@
-<p>warehouses works!</p>
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header -->
+        <div
+            class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Warehouse Management</h1>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                        {{ activeWarehouses() }} active
+                    </span>
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage warehouse locations, zones, and storage capacity</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button (click)="activeTab.set('overview')"
+                    class="px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                    [class.bg-indigo-600]="activeTab() === 'overview'" [class.text-white]="activeTab() === 'overview'"
+                    [class.bg-white]="activeTab() !== 'overview'" [class.text-gray-700]="activeTab() !== 'overview'"
+                    [class.border]="activeTab() !== 'overview'" [class.border-gray-200]="activeTab() !== 'overview'">
+                    <i class="bi bi-grid"></i>
+                    Overview
+                </button>
+                @if (selectedWarehouse()) {
+                <button (click)="activeTab.set('layout')"
+                    class="px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                    [class.bg-indigo-600]="activeTab() === 'layout'" [class.text-white]="activeTab() === 'layout'"
+                    [class.bg-white]="activeTab() !== 'layout'" [class.text-gray-700]="activeTab() !== 'layout'"
+                    [class.border]="activeTab() !== 'layout'" [class.border-gray-200]="activeTab() !== 'layout'">
+                    <i class="bi bi-diagram-3"></i>
+                    Layout
+                </button>
+                <button (click)="activeTab.set('activity')"
+                    class="px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                    [class.bg-indigo-600]="activeTab() === 'activity'" [class.text-white]="activeTab() === 'activity'"
+                    [class.bg-white]="activeTab() !== 'activity'" [class.text-gray-700]="activeTab() !== 'activity'"
+                    [class.border]="activeTab() !== 'activity'" [class.border-gray-200]="activeTab() !== 'activity'">
+                    <i class="bi bi-activity"></i>
+                    Activity
+                </button>
+                }
+                <div class="w-px h-8 bg-gray-200 mx-1"></div>
+                <button (click)="openWarehouseModal()"
+                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200">
+                    <i class="bi bi-plus-lg"></i>
+                    Add Warehouse
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Total Warehouses</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ warehouseList().length }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <i class="bi bi-building text-indigo-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-xs text-green-600 font-medium">{{ activeWarehouses() }} active</span>
+                    <span class="text-xs text-gray-400">•</span>
+                    <span class="text-xs text-gray-500">{{ warehouseList().length - activeWarehouses() }}
+                        inactive</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Total Capacity</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ totalCapacity() | number }} <span
+                                class="text-sm font-normal text-gray-500">sq ft</span></p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="bi bi-rulers text-blue-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Across all locations</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Space Used</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ totalUsedSpace() | number }} <span
+                                class="text-sm font-normal text-gray-500">sq ft</span></p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="bi bi-box-seam text-green-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">{{ overallUtilization() | number:'1.1-1' }}% utilization</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Total Zones</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ totalZones() }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                        <i class="bi bi-diagram-2 text-orange-600 text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-xs text-gray-500">Storage & operational areas</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
+        @if (activeTab() === 'overview') {
+        <div class="space-y-6 animate-fade-in">
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" [(ngModel)]="searchQuery" placeholder="Search warehouses..."
+                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select [(ngModel)]="filterStatus"
+                            class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                            <option value="all">All Status</option>
+                            <option value="active">Active Only</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+
+                        <select [(ngModel)]="filterUtilization"
+                            class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm">
+                            <option value="all">All Utilization</option>
+                            <option value="high">High (>80%)</option>
+                            <option value="medium">Medium (50-80%)</option>
+                            <option value="low">Low (<50%)< /option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warehouse Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                @for (warehouse of filteredWarehouses(); track warehouse.id) {
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all group cursor-pointer"
+                    (click)="selectWarehouse(warehouse)">
+                    <!-- Header -->
+                    <div class="p-5 border-b border-gray-100">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-building text-indigo-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3
+                                        class="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                        {{ warehouse.name }}</h3>
+                                    <p class="text-sm text-gray-500">{{ warehouse.code }}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-medium"
+                                [class.bg-green-100]="warehouse.isActive" [class.text-green-700]="warehouse.isActive"
+                                [class.bg-gray-100]="!warehouse.isActive" [class.text-gray-600]="!warehouse.isActive">
+                                {{ warehouse.isActive ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <i class="bi bi-geo-alt text-gray-400"></i>
+                            {{ warehouse.location }}
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="p-5 space-y-4">
+                        <!-- Utilization Bar -->
+                        <div>
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-gray-600">Space Utilization</span>
+                                <span class="font-medium"
+                                    [class]="getUtilizationColor((warehouse.usedSpace / warehouse.capacity) * 100)">
+                                    {{ (warehouse.usedSpace / warehouse.capacity) * 100 | number:'1.1-1' }}%
+                                </span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500"
+                                    [class]="getUtilizationBg((warehouse.usedSpace / warehouse.capacity) * 100)"
+                                    [style.width.%]="(warehouse.usedSpace / warehouse.capacity) * 100">
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>{{ warehouse.usedSpace | number }} used</span>
+                                <span>{{ warehouse.capacity | number }} total</span>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                            <div class="text-center">
+                                <p class="text-lg font-bold text-gray-900">{{ warehouse.zones.length }}</p>
+                                <p class="text-xs text-gray-500">Zones</p>
+                            </div>
+                            <div class="text-center border-x border-gray-100">
+                                <p class="text-lg font-bold text-gray-900">{{ getZoneCount(warehouse) }}</p>
+                                <p class="text-xs text-gray-500">Bins</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-lg font-bold text-gray-900">{{ warehouse.manager.split(' ')[0] }}</p>
+                                <p class="text-xs text-gray-500">Manager</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="px-5 py-3 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+                        <button (click)="$event.stopPropagation(); toggleWarehouseStatus(warehouse)"
+                            class="text-sm font-medium transition-colors" [class.text-green-600]="!warehouse.isActive"
+                            [class.text-gray-600]="warehouse.isActive"
+                            [class.hover:text-green-700]="!warehouse.isActive"
+                            [class.hover:text-gray-700]="warehouse.isActive">
+                            {{ warehouse.isActive ? 'Deactivate' : 'Activate' }}
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <button (click)="$event.stopPropagation(); openWarehouseModal(warehouse)"
+                                class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button (click)="$event.stopPropagation(); confirmDelete(warehouse)"
+                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                } @empty {
+                <div class="col-span-full py-12 text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="bi bi-building text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">No warehouses found</h3>
+                    <p class="text-gray-500">Try adjusting your filters or add a new warehouse</p>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        <!-- Layout Tab -->
+        @if (activeTab() === 'layout' && selectedWarehouse(); as warehouse) {
+        <div class="space-y-6 animate-fade-in">
+            <!-- Warehouse Header -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <button (click)="clearSelection()"
+                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">{{ warehouse.name }}</h2>
+                            <p class="text-sm text-gray-500">{{ warehouse.code }} • {{ warehouse.location }}</p>
+                        </div>
+                    </div>
+                    <button (click)="showZoneModal.set(true)"
+                        class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2">
+                        <i class="bi bi-plus-lg"></i>
+                        Add Zone
+                    </button>
+                </div>
+            </div>
+
+            <!-- Zones -->
+            <div class="space-y-4">
+                @for (zone of warehouse.zones; track zone.id) {
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <!-- Zone Header -->
+                    <div class="p-4 border-b border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors"
+                        (click)="toggleZone(zone.id)">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                                [class]="getZoneTypeColor(zone.type)">
+                                <i class="bi" [class]="getZoneTypeIcon(zone.type)"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ zone.name }}</h3>
+                                <p class="text-sm text-gray-500 capitalize">{{ zone.type }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-gray-500">{{ zone.aisles.length }} aisles</span>
+                            <i class="bi bi-chevron-down text-gray-400 transition-transform duration-200"
+                                [class.rotate-180]="isZoneExpanded(zone.id)"></i>
+                        </div>
+                    </div>
+
+                    <!-- Zone Content -->
+                    @if (isZoneExpanded(zone.id)) {
+                    <div class="p-4 space-y-4 animate-slide-down">
+                        @for (aisle of zone.aisles; track aisle.id) {
+                        <div class="border border-gray-200 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-medium text-gray-900">{{ aisle.name }}</h4>
+                                <span class="text-xs text-gray-500">{{ getAisleBinCount(aisle) }} bins</span>
+                            </div>
+
+                            <div class="space-y-3">
+                                @for (rack of aisle.racks; track rack.id) {
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-2">{{ rack.name }}</p>
+                                    <div class="grid grid-cols-10 gap-1">
+                                        @for (bin of rack.bins; track bin.id) {
+                                        <div class="aspect-square rounded-md cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all relative group"
+                                            [class]="getBinStatusColor(bin.status)"
+                                            [title]="bin.code + ' - ' + bin.status">
+                                            <div
+                                                class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span class="text-[8px] font-bold text-white drop-shadow-md">{{
+                                                    bin.code.split('-')[2] }}</span>
+                                            </div>
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        } @empty {
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="bi bi-diagram-3 text-3xl mb-2"></i>
+                            <p>No aisles configured in this zone</p>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                } @empty {
+                <div class="bg-white rounded-2xl p-12 border border-gray-100 shadow-sm text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="bi bi-diagram-2 text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">No zones configured</h3>
+                    <p class="text-gray-500 mb-4">Add zones to organize your warehouse storage</p>
+                    <button (click)="showZoneModal.set(true)"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                        Add First Zone
+                    </button>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        <!-- Activity Tab -->
+        @if (activeTab() === 'activity' && selectedWarehouse(); as wh) {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-in">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button (click)="clearSelection()"
+                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Recent Activity</h2>
+                        <p class="text-sm text-gray-500">{{ wh.name }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divide-y divide-gray-100">
+                <!-- Recent Activity -->
+                @for (activity of getRecentFilteredActivity(wh); track activity.id) {
+                <div class="p-4 flex items-start gap-4 hover:bg-gray-50/50 transition-colors">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        [class.bg-blue-100]="activity.type === 'inbound'"
+                        [class.bg-green-100]="activity.type === 'outbound'"
+                        [class.bg-yellow-100]="activity.type === 'transfer'"
+                        [class.bg-purple-100]="activity.type === 'adjustment'">
+                        <i class="bi" [class.bi-box-arrow-in-down]="activity.type === 'inbound'"
+                            [class.bi-box-arrow-up]="activity.type === 'outbound'"
+                            [class.bi-arrow-left-right]="activity.type === 'transfer'"
+                            [class.bi-sliders]="activity.type === 'adjustment'"
+                            [class.text-blue-600]="activity.type === 'inbound'"
+                            [class.text-green-600]="activity.type === 'outbound'"
+                            [class.text-yellow-600]="activity.type === 'transfer'"
+                            [class.text-purple-600]="activity.type === 'adjustment'"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900">{{ activity.description }}</p>
+                        <div class="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                            <span>{{ activity.time }}</span>
+                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                            <span>by {{ activity.user }}</span>
+                        </div>
+                    </div>
+                </div>
+                } @empty {
+                <div class="p-12 text-center text-gray-500">
+                    <i class="bi bi-clock-history text-3xl mb-2"></i>
+                    <p>No recent activity recorded</p>
+                </div>
+                }
+
+            </div>
+        </div>
+        }
+
+    </div>
+</div>
+
+<!-- Warehouse Modal -->
+@if (showWarehouseModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">
+                {{ selectedWarehouse() ? 'Edit Warehouse' : 'Add New Warehouse' }}
+            </h2>
+            <button (click)="closeWarehouseModal()"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form [formGroup]="warehouseForm" class="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Warehouse Name</label>
+                    <input type="text" formControlName="name"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        [class.border-red-300]="warehouseForm.get('name')?.invalid && warehouseForm.get('name')?.touched">
+                    @if (warehouseForm.get('name')?.invalid && warehouseForm.get('name')?.touched) {
+                    <p class="text-red-500 text-xs mt-1">Name is required (min 3 characters)</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Warehouse Code</label>
+                    <input type="text" formControlName="code" placeholder="WH-XXX-001"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        [class.border-red-300]="warehouseForm.get('code')?.invalid && warehouseForm.get('code')?.touched">
+                    @if (warehouseForm.get('code')?.invalid && warehouseForm.get('code')?.touched) {
+                    <p class="text-red-500 text-xs mt-1">Format: WH-XXX-001</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location (City, State)</label>
+                    <input type="text" formControlName="location" placeholder="New York, NY"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        [class.border-red-300]="warehouseForm.get('location')?.invalid && warehouseForm.get('location')?.touched">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
+                    <textarea formControlName="address" rows="2"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
+                    <input type="text" formControlName="manager"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact Phone</label>
+                    <input type="tel" formControlName="contact"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Capacity (sq ft)</label>
+                    <input type="number" formControlName="capacity" min="1000"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+            </div>
+        </form>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="closeWarehouseModal()"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="saveWarehouse()" [disabled]="warehouseForm.invalid"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                {{ selectedWarehouse() ? 'Save Changes' : 'Create Warehouse' }}
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirm()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-exclamation-triangle text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Warehouse?</h3>
+            <p class="text-gray-500 mb-6">
+                Are you sure you want to delete <strong>{{ selectedWarehouse()?.name }}</strong>?
+                This action cannot be undone and will remove all associated zones and location data.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button (click)="showDeleteConfirm.set(false); selectedWarehouse.set(null)"
+                    class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button (click)="deleteWarehouse()"
+                    class="px-6 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200">
+                    Delete Warehouse
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}

@@ -1,0 +1,204 @@
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Custom scrollbar
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+}
+
+// Stock level bars
+.h-2,
+.h-3 {
+    transition: all 0.3s ease;
+
+    >div {
+        transition: width 0.5s ease;
+    }
+}
+
+// Card hover effects
+.bg-white {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        &.shadow-sm {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    }
+}
+
+// Critical alert row highlight
+tr.bg-red-50 {
+    animation: subtle-pulse 2s infinite;
+}
+
+@keyframes subtle-pulse {
+
+    0%,
+    100% {
+        background-color: rgb(254, 242, 242);
+    }
+
+    50% {
+        background-color: rgb(254, 226, 226);
+    }
+}
+
+// Progress bar colors
+.bg-red-500 {
+    background-color: #ef4444;
+}
+
+.bg-orange-500 {
+    background-color: #f97316;
+}
+
+.bg-yellow-500 {
+    background-color: #eab308;
+}
+
+.bg-green-500 {
+    background-color: #22c55e;
+}
+
+.bg-blue-500 {
+    background-color: #3b82f6;
+}
+
+// Status badges
+span[class*="bg-"] {
+    transition: all 0.2s ease;
+}
+
+// Button interactions
+button {
+    transition: all 0.2s ease;
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+}
+
+// Line clamp for product names
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+// Gradient text for header
+.bg-gradient-to-r {
+    background-size: 200% 200%;
+    animation: gradient-shift 5s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+// Focus states
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+// Table row transitions
+tr {
+    transition: background-color 0.15s ease;
+}
+
+// Checkbox styling
+input[type="checkbox"] {
+    cursor: pointer;
+
+    &:checked {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 1024px) {
+    .grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+
+    .grid-cols-2,
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+}

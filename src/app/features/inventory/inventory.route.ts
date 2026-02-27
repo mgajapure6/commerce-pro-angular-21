@@ -16,11 +16,11 @@ export const INVENTORY_ROUTES: Routes = [
   },
   {
     path: 'transfers',
-    loadComponent: () => import('./transfers/transfers').then(m => m.Transfers)
+    loadComponent: () => import('./stock-transfers/stock-transfers').then(m => m.StockTransfers)
   },
   {
     path: 'adjustments',
-    loadComponent: () => import('./adjustments/adjustments').then(m => m.Adjustments)
+    loadComponent: () => import('./stock-adjustment/stock-adjustment').then(m => m.StockAdjustment)
   },
   {
     path: 'low-stock',

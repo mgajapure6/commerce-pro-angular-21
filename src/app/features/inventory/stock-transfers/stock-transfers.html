@@ -1,0 +1,1482 @@
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Header -->
+        <div
+            class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-gray-900">Stock Transfers</h1>
+                    @if (stats().inTransit > 0) {
+                    <span
+                        class="px-3 py-1 bg-purple-100 text-purple-700 text-sm font-medium rounded-full flex items-center gap-1">
+                        <i class="bi bi-truck"></i>
+                        {{ stats().inTransit }} in transit
+                    </span>
+                    }
+                </div>
+                <p class="text-gray-500 mt-1 text-sm">Manage inter-warehouse transfers, shipping, and receiving</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button (click)="goToList()"
+                    class="px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                    [class.bg-indigo-600]="activeView() === 'list'" [class.text-white]="activeView() === 'list'"
+                    [class.bg-white]="activeView() !== 'list'" [class.text-gray-700]="activeView() !== 'list'"
+                    [class.border]="activeView() !== 'list'" [class.border-gray-200]="activeView() !== 'list'"
+                    [class.shadow-sm]="activeView() !== 'list'">
+                    <i class="bi bi-list-check"></i>
+                    All Transfers
+                </button>
+                <button (click)="startNewTransfer()"
+                    class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200">
+                    <i class="bi bi-plus-lg"></i>
+                    New Transfer
+                </button>
+            </div>
+        </div>
+
+        <!-- LIST VIEW -->
+        @if (activeView() === 'list') {
+        <div class="space-y-6 animate-fade-in">
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-arrow-left-right text-indigo-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Total</p>
+                            <p class="text-xl font-bold text-gray-900">{{ stats().total }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-pencil text-gray-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Draft</p>
+                            <p class="text-xl font-bold text-gray-900">{{ stats().draft }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-hourglass-split text-yellow-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Pending</p>
+                            <p class="text-xl font-bold text-gray-900">{{ stats().pending }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-truck text-purple-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">In Transit</p>
+                            <p class="text-xl font-bold text-gray-900">{{ stats().inTransit }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-check-all text-green-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Completed</p>
+                            <p class="text-xl font-bold text-gray-900">{{ stats().completed }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-currency-dollar text-blue-600 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Total Value</p>
+                            <p class="text-xl font-bold text-gray-900">{{ formatCurrency(stats().totalValue) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
+                <div class="flex flex-col lg:flex-row gap-4">
+                    <div class="relative flex-1">
+                        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" [(ngModel)]="searchQuery"
+                            placeholder="Search by transfer number, notes, or requester..."
+                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <select [(ngModel)]="filterStatus"
+                            class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm min-w-[140px]">
+                            <option value="all">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="received">Received</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+
+                        <select [(ngModel)]="filterType"
+                            class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm min-w-[140px]">
+                            <option value="all">All Types</option>
+                            <option value="standard">Standard</option>
+                            <option value="replenishment">Replenishment</option>
+                            <option value="returns">Returns</option>
+                            <option value="consignment">Consignment</option>
+                        </select>
+
+                        <select [(ngModel)]="filterPriority"
+                            class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm min-w-[140px]">
+                            <option value="all">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-gray-100">
+                    <span class="text-sm text-gray-500">From:</span>
+                    <select [(ngModel)]="filterSourceWarehouse"
+                        class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option value="all">All Sources</option>
+                        @for (wh of warehouses(); track wh.id) {
+                        <option [value]="wh.id">{{ wh.name }}</option>
+                        }
+                    </select>
+
+                    <i class="bi bi-arrow-right text-gray-400"></i>
+
+                    <span class="text-sm text-gray-500">To:</span>
+                    <select [(ngModel)]="filterDestinationWarehouse"
+                        class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option value="all">All Destinations</option>
+                        @for (wh of warehouses(); track wh.id) {
+                        <option [value]="wh.id">{{ wh.name }}</option>
+                        }
+                    </select>
+
+                    <div class="flex items-center gap-2 ml-auto">
+                        <span class="text-sm text-gray-500">Date:</span>
+                        <input type="date" [(ngModel)]="filterDateFrom"
+                            class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                        <span class="text-gray-400">to</span>
+                        <input type="date" [(ngModel)]="filterDateTo"
+                            class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfers Table -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50/50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Transfer #
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Route</th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status
+                                </th>
+                                <th class="px-4 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Priority
+                                </th>
+                                <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Items
+                                </th>
+                                <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Weight
+                                </th>
+                                <th class="px-4 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Value
+                                </th>
+                                <th class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Required
+                                    By</th>
+                                <th class="px-4 py-4 text-center text-xs font-semibold text-gray-500 uppercase">Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @for (transfer of filteredTransfers(); track transfer.id) {
+                            <tr class="hover:bg-gray-50/50 transition-colors group cursor-pointer"
+                                (click)="viewTransferDetail(transfer)" [class.bg-red-50]="isOverdue(transfer)">
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-900">{{ transfer.transferNumber }}</span>
+                                        <span class="px-2 py-0.5 rounded text-xs font-medium"
+                                            [class]="getTypeColor(transfer.type)">
+                                            {{ transfer.type }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-0.5">by {{ transfer.requestedBy }}</p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <span class="text-gray-700">{{ transfer.sourceWarehouse.code }}</span>
+                                        <i class="bi bi-arrow-right text-gray-400"></i>
+                                        <span class="text-gray-700">{{ transfer.destinationWarehouse.code }}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500">{{ transfer.sourceWarehouse.name }} → {{
+                                        transfer.destinationWarehouse.name }}</p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border"
+                                        [class]="getStatusColor(transfer.status)">
+                                        <i class="bi mr-1.5" [class]="getStatusIcon(transfer.status)"></i>
+                                        {{ transfer.status.replace('_', ' ') | titlecase }}
+                                    </span>
+                                    @if (transfer.shipment?.trackingNumber) {
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="bi bi-upc"></i> {{ transfer.shipment?.trackingNumber }}
+                                    </p>
+                                    }
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="px-2 py-1 rounded-lg text-xs font-medium uppercase"
+                                        [class]="getPriorityColor(transfer.priority)">
+                                        {{ transfer.priority }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-sm font-medium text-gray-900">{{ transfer.totalItems }}</span>
+                                    <span class="text-xs text-gray-500"> / {{ transfer.totalQuantity }} qty</span>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-sm font-medium text-gray-900">{{
+                                        formatWeight(transfer.totalWeight) }}</span>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-sm font-medium text-gray-900">{{
+                                        formatCurrency(transfer.totalValue) }}</span>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    @if (transfer.requiredBy) {
+                                    @if (isOverdue(transfer)) {
+                                    <span
+                                        class="text-xs font-medium text-red-600 flex items-center justify-center gap-1">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        {{ Math.abs(getDaysUntilRequired(transfer)) }} days overdue
+                                    </span>
+                                    } @else {
+                                    <span class="text-xs text-gray-600"
+                                        [class.text-orange-600]="getDaysUntilRequired(transfer) <= 2">
+                                        {{ getDaysUntilRequired(transfer) }} days left
+                                    </span>
+                                    }
+                                    <p class="text-xs text-gray-400">{{ formatDate(transfer.requiredBy).split(',')[0] }}
+                                    </p>
+                                    } @else {
+                                    <span class="text-xs text-gray-400">-</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div
+                                        class="flex items-center justify-center gap-1 transition-opacity">
+                                        @if (transfer.status === 'pending') {
+                                        <button (click)="$event.stopPropagation(); approveTransfer(transfer)"
+                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                            title="Approve">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        }
+                                        @if (transfer.status === 'approved') {
+                                        <button (click)="$event.stopPropagation(); openShipModal(transfer)"
+                                            class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            title="Ship">
+                                            <i class="bi bi-truck"></i>
+                                        </button>
+                                        }
+                                        @if (transfer.status === 'in_transit') {
+                                        <button (click)="$event.stopPropagation(); openReceiveModal(transfer)"
+                                            class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                            title="Receive">
+                                            <i class="bi bi-box-seam"></i>
+                                        </button>
+                                        }
+                                        @if (transfer.status === 'draft' || transfer.status === 'pending') {
+                                        <button (click)="$event.stopPropagation(); cancelTransfer(transfer)"
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Cancel">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                        }
+                                        <button (click)="$event.stopPropagation(); viewTransferDetail(transfer)"
+                                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                            title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="9" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div
+                                            class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                            <i class="bi bi-arrow-left-right text-gray-400 text-2xl"></i>
+                                        </div>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-1">No transfers found</h3>
+                                        <p class="text-gray-500 mb-4">Try adjusting your filters or create a new
+                                            transfer</p>
+                                        <button (click)="startNewTransfer()"
+                                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                            Create Transfer
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- CREATE VIEW -->
+        @if (activeView() === 'create') {
+        <div class="space-y-6 animate-fade-in">
+            <!-- Progress Steps -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between max-w-3xl mx-auto">
+                    @for (step of [1, 2, 3, 4]; track step) {
+                    <div class="flex items-center" [class.flex-1]="step < 4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all"
+                                [class.bg-indigo-600]="currentStep() >= step" [class.text-white]="currentStep() >= step"
+                                [class.bg-gray-200]="currentStep() < step" [class.text-gray-600]="currentStep() < step">
+                                @if (currentStep() > step) {
+                                <i class="bi bi-check-lg"></i>
+                                } @else {
+                                {{ step }}
+                                }
+                            </div>
+                            <span class="text-xs mt-2 font-medium" [class.text-gray-900]="currentStep() >= step"
+                                [class.text-gray-400]="currentStep() < step">
+                                {{ step === 1 ? 'Details' : step === 2 ? 'Route' : step === 3 ? 'Items' : 'Review' }}
+                            </span>
+                        </div>
+                        @if (step < 4) { <div class="flex-1 h-1 mx-4 bg-gray-200 rounded-full">
+                            <div class="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                [style.width.%]="currentStep() > step ? 100 : 0"></div>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Step 1: Basic Details -->
+        @if (currentStep() === 1) {
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm animate-slide-up">
+            <h2 class="text-lg font-semibold text-gray-900 mb-6">Transfer Details</h2>
+
+            <form [formGroup]="transferForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Transfer Type *</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        @for (type of ['standard', 'replenishment', 'returns', 'consignment']; track type) {
+                        <button type="button" (click)="transferForm.patchValue({ type: type })"
+                            class="px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all capitalize"
+                            [class.border-indigo-600]="transferForm.get('type')?.value === type"
+                            [class.bg-indigo-50]="transferForm.get('type')?.value === type"
+                            [class.text-indigo-700]="transferForm.get('type')?.value === type"
+                            [class.border-gray-200]="transferForm.get('type')?.value !== type"
+                            [class.text-gray-700]="transferForm.get('type')?.value !== type">
+                            {{ type }}
+                        </button>
+                        }
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        @for (priority of ['low', 'normal', 'high', 'urgent']; track priority) {
+                        <button type="button" (click)="transferForm.patchValue({ priority: priority })"
+                            class="px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all capitalize"
+                            [class.border-indigo-600]="transferForm.get('priority')?.value === priority"
+                            [class.bg-indigo-50]="transferForm.get('priority')?.value === priority"
+                            [class.text-indigo-700]="transferForm.get('priority')?.value === priority"
+                            [class.border-gray-200]="transferForm.get('priority')?.value !== priority"
+                            [class.text-gray-700]="transferForm.get('priority')?.value !== priority">
+                            {{ priority }}
+                        </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
+                    <input type="text" formControlName="reason" placeholder="e.g., Replenishment for promotion"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Required By *</label>
+                    <input type="date" formControlName="requiredBy"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea formControlName="notes" rows="2" placeholder="External notes visible to all parties..."
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Internal Notes</label>
+                    <textarea formControlName="internalNotes" rows="2"
+                        placeholder="Internal notes for warehouse staff only..."
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+            </form>
+
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
+                <button (click)="goToList()"
+                    class="px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button (click)="nextStep()"
+                    [disabled]="!transferForm.get('type')?.value || !transferForm.get('priority')?.value || !transferForm.get('reason')?.value || !transferForm.get('requiredBy')?.value"
+                    class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                    Next: Select Route
+                    <i class="bi bi-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+        }
+
+        <!-- Step 2: Route Selection -->
+        @if (currentStep() === 2) {
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm animate-slide-up">
+            <h2 class="text-lg font-semibold text-gray-900 mb-6">Select Route</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Source -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Source Warehouse *</label>
+                    <div class="space-y-3">
+                        @for (wh of warehouses(); track wh.id) {
+                        <button type="button" (click)="transferForm.patchValue({ sourceWarehouseId: wh.id })"
+                            class="w-full p-4 rounded-xl border-2 text-left transition-all"
+                            [class.border-indigo-600]="transferForm.get('sourceWarehouseId')?.value === wh.id"
+                            [class.bg-indigo-50]="transferForm.get('sourceWarehouseId')?.value === wh.id"
+                            [class.border-gray-200]="transferForm.get('sourceWarehouseId')?.value !== wh.id">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                    <i class="bi bi-box-seam text-indigo-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900">{{ wh.name }}</p>
+                                    <p class="text-sm text-gray-500">{{ wh.code }}</p>
+                                    <p class="text-xs text-gray-400 mt-1">{{ wh.location }}</p>
+                                </div>
+                                @if (transferForm.get('sourceWarehouseId')?.value === wh.id) {
+                                <i class="bi bi-check-circle-fill text-indigo-600 text-xl"></i>
+                                }
+                            </div>
+                        </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden md:flex items-center justify-center">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-arrow-right text-gray-400 text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Destination -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Destination Warehouse *</label>
+                    <div class="space-y-3">
+                        @for (wh of warehouses(); track wh.id) {
+                        <button type="button" (click)="transferForm.patchValue({ destinationWarehouseId: wh.id })"
+                            [disabled]="transferForm.get('sourceWarehouseId')?.value === wh.id"
+                            class="w-full p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            [class.border-indigo-600]="transferForm.get('destinationWarehouseId')?.value === wh.id"
+                            [class.bg-indigo-50]="transferForm.get('destinationWarehouseId')?.value === wh.id"
+                            [class.border-gray-200]="transferForm.get('destinationWarehouseId')?.value !== wh.id">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                    <i class="bi bi-shop text-green-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900">{{ wh.name }}</p>
+                                    <p class="text-sm text-gray-500">{{ wh.code }}</p>
+                                    <p class="text-xs text-gray-400 mt-1">{{ wh.location }}</p>
+                                </div>
+                                @if (transferForm.get('destinationWarehouseId')?.value === wh.id) {
+                                <i class="bi bi-check-circle-fill text-indigo-600 text-xl"></i>
+                                }
+                            </div>
+                        </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between gap-3 mt-8 pt-6 border-t border-gray-100">
+                <button (click)="prevStep()"
+                    class="px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back
+                </button>
+                <button (click)="nextStep()"
+                    [disabled]="!transferForm.get('sourceWarehouseId')?.value || !transferForm.get('destinationWarehouseId')?.value || transferForm.get('sourceWarehouseId')?.value === transferForm.get('destinationWarehouseId')?.value"
+                    class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                    Next: Add Items
+                    <i class="bi bi-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+        }
+
+        <!-- Step 3: Items -->
+        @if (currentStep() === 3) {
+        <div class="space-y-4 animate-slide-up">
+            <!-- Summary Bar -->
+            <div
+                class="bg-indigo-600 text-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <i class="bi bi-box-seam text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold">{{ draftSummary().count }} items</p>
+                        <p class="text-sm text-indigo-100">{{ draftSummary().totalQty }} units total</p>
+                    </div>
+                </div>
+                <div class="flex gap-6 text-right">
+                    <div>
+                        <p class="text-sm text-indigo-100">Weight</p>
+                        <p class="text-xl font-bold">{{ formatWeight(draftSummary().totalWeight) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-indigo-100">Value</p>
+                        <p class="text-xl font-bold">{{ formatCurrency(draftSummary().totalValue) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Item -->
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    From: <strong>{{ getSourceWarehouseName() }}</strong>
+                </div>
+                <button (click)="openAddLineItem()"
+                    class="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                    <i class="bi bi-plus-lg"></i>
+                    Add Product
+                </button>
+            </div>
+
+            <!-- Items Table -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50/50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Source Bin
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Available
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Transfer Qty
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Weight</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Value</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @for (item of draftLineItems(); track item.id) {
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <img [src]="item.product.image" [alt]="item.product.name"
+                                        class="w-10 h-10 rounded-lg object-cover bg-gray-100">
+                                    <div>
+                                        <p class="font-medium text-gray-900 text-sm">{{ item.product.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ item.product.sku }}</p>
+                                        @if (item.product.isHazmat || item.product.isFragile ||
+                                        item.product.requiresColdStorage) {
+                                        <div class="flex gap-1 mt-1">
+                                            @if (item.product.isHazmat) {
+                                            <span
+                                                class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded">HAZMAT</span>
+                                            }
+                                            @if (item.product.isFragile) {
+                                            <span
+                                                class="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] rounded">FRAGILE</span>
+                                            }
+                                            @if (item.product.requiresColdStorage) {
+                                            <span
+                                                class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded">COLD</span>
+                                            }
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm text-gray-700">{{ item.sourceBin || 'N/A' }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="text-sm text-gray-500">
+                                    {{ getAvailableSourceAvaliableQty(item) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ item.quantityRequested }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="text-sm text-gray-700">{{ formatWeight(item.totalWeight) }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(item.quantityRequested
+                                    * item.unitCost) }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button (click)="editLineItem(item)"
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button (click)="removeLineItem(item.id)"
+                                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div
+                                        class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                        <i class="bi bi-box-seam text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <p class="text-gray-500">No items added. Click "Add Product" to start.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-between gap-3">
+                <button (click)="prevStep()"
+                    class="px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back
+                </button>
+                <div class="flex gap-3">
+                    <button (click)="saveDraft()" [disabled]="draftLineItems().length === 0"
+                        class="px-6 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50">
+                        Save Draft
+                    </button>
+                    <button (click)="nextStep()" [disabled]="draftLineItems().length === 0"
+                        class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                        Review
+                        <i class="bi bi-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Step 4: Review -->
+        @if (currentStep() === 4) {
+        <div class="space-y-6 animate-slide-up">
+            <!-- Review Summary -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">Review Transfer</h2>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-xs text-gray-500 mb-1">Type</p>
+                        <p class="font-semibold text-gray-900 capitalize">{{ transferForm.get('type')?.value }}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-xs text-gray-500 mb-1">Priority</p>
+                        <span class="px-2 py-1 rounded-lg text-xs font-medium uppercase"
+                            [class]="getPriorityColor(transferForm.get('priority')?.value)">
+                            {{ transferForm.get('priority')?.value }}
+                        </span>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-xs text-gray-500 mb-1">Required By</p>
+                        <p class="font-semibold text-gray-900">{{ transferForm.get('requiredBy')?.value |
+                            date:'mediumDate' }}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <p class="text-xs text-gray-500 mb-1">Total Items</p>
+                        <p class="font-semibold text-gray-900">{{ draftLineItems().length }} products</p>
+                    </div>
+                </div>
+
+                <!-- Route Summary -->
+                <div class="flex items-center justify-center gap-4 p-4 bg-indigo-50 rounded-xl mb-6">
+                    <div class="text-center">
+                        <p class="font-semibold text-gray-900">{{ getSourceWarehouse() }}</p>
+                        <p class="text-xs text-gray-500">Source</p>
+                    </div>
+                    <div class="flex-1 max-w-xs">
+                        <div class="h-1 bg-indigo-200 rounded-full relative">
+                            <div
+                                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <i class="bi bi-arrow-right text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-semibold text-gray-900">{{ getDestinationWarehouse() }}</p>
+                        <p class="text-xs text-gray-500">Destination</p>
+                    </div>
+                </div>
+
+                <!-- Totals -->
+                <div class="grid grid-cols-4 gap-4 text-center">
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <p class="text-xs text-blue-600 mb-1">Total Quantity</p>
+                        <p class="text-2xl font-bold text-blue-700">{{ draftSummary().totalQty }}</p>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                        <p class="text-xs text-green-600 mb-1">Total Weight</p>
+                        <p class="text-2xl font-bold text-green-700">{{ formatWeight(draftSummary().totalWeight) }}</p>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-100">
+                        <p class="text-xs text-purple-600 mb-1">Total Volume</p>
+                        <p class="text-2xl font-bold text-purple-700">{{ formatVolume(draftSummary().totalVolume) }}</p>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                        <p class="text-xs text-orange-600 mb-1">Total Value</p>
+                        <p class="text-2xl font-bold text-orange-700">{{ formatCurrency(draftSummary().totalValue) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Summary -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="font-medium text-gray-900">Items to Transfer</h3>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                    @for (item of draftLineItems(); track item.id) {
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <img [src]="item.product.image" class="w-12 h-12 rounded-lg object-cover bg-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ item.product.name }}</p>
+                                <p class="text-xs text-gray-500">{{ item.product.sku }} • Qty: {{ item.quantityRequested
+                                    }}</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">{{ formatCurrency(item.quantityRequested *
+                            item.unitCost) }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <div class="flex justify-between gap-3">
+                <button (click)="prevStep()"
+                    class="px-6 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back
+                </button>
+                <div class="flex gap-3">
+                    <button (click)="saveDraft()"
+                        class="px-6 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all">
+                        Save as Draft
+                    </button>
+                    <button (click)="submitTransfer()"
+                        class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                        Submit Transfer
+                        <i class="bi bi-check-lg ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- DETAIL VIEW -->
+    @if (activeView() === 'detail' && selectedTransfer(); as transfer) {
+    <div class="space-y-6 animate-fade-in">
+        <!-- Detail Header -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <button (click)="goToList()"
+                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="bi bi-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <h1 class="text-2xl font-bold text-gray-900">{{ transfer.transferNumber }}</h1>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium border"
+                                [class]="getStatusColor(transfer.status)">
+                                <i class="bi mr-1" [class]="getStatusIcon(transfer.status)"></i>
+                                {{ transfer.status.replace('_', ' ') | titlecase }}
+                            </span>
+                            <span class="px-2 py-1 rounded-lg text-xs font-medium uppercase"
+                                [class]="getPriorityColor(transfer.priority)">
+                                {{ transfer.priority }}
+                            </span>
+                        </div>
+                        <p class="text-gray-500">{{ formatDate(transfer.createdAt) }} by {{ transfer.requestedBy }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    @if (transfer.status === 'pending') {
+                    <button (click)="approveTransfer(transfer)"
+                        class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-all flex items-center gap-2">
+                        <i class="bi bi-check-lg"></i>
+                        Approve
+                    </button>
+                    }
+                    @if (transfer.status === 'approved') {
+                    <button (click)="openShipModal(transfer)"
+                        class="px-4 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-700 transition-all flex items-center gap-2">
+                        <i class="bi bi-truck"></i>
+                        Mark as Shipped
+                    </button>
+                    }
+                    @if (transfer.status === 'in_transit') {
+                    <button (click)="openReceiveModal(transfer)"
+                        class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-all flex items-center gap-2">
+                        <i class="bi bi-box-seam"></i>
+                        Receive
+                    </button>
+                    }
+                    <button (click)="showPrintModal.set(true)"
+                        class="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <i class="bi bi-printer"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Visualization -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div class="flex items-center justify-between">
+                <!-- Source -->
+                <div class="flex-1">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+                            <i class="bi bi-box-seam text-blue-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">From</p>
+                            <h3 class="text-lg font-bold text-gray-900">{{ transfer.sourceWarehouse.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ transfer.sourceWarehouse.location }}</p>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p><i class="bi bi-person mr-2"></i>{{ transfer.sourceWarehouse.contactName }}</p>
+                        <p><i class="bi bi-telephone mr-2"></i>{{ transfer.sourceWarehouse.contactPhone }}</p>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="flex-1 max-w-md px-8">
+                    <div class="relative">
+                        <div class="h-2 bg-gray-200 rounded-full">
+                            <div class="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                [style.width.%]="transfer.status === 'completed' ? 100 : transfer.status === 'in_transit' ? 66 : transfer.status === 'approved' ? 33 : 0">
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span class="text-center">
+                                <i class="bi bi-check-circle-fill text-green-500 block mb-1"></i>
+                                Created
+                            </span>
+                            <span class="text-center">
+                                <i class="bi"
+                                    [class.bi-check-circle-fill]="transfer.status !== 'draft' && transfer.status !== 'pending'"
+                                    [class.bi-circle]="transfer.status === 'draft' || transfer.status === 'pending'"
+                                    class="block mb-1"></i>
+                                Approved
+                            </span>
+                            <span class="text-center">
+                                <i class="bi"
+                                    [class.bi-check-circle-fill]="transfer.status === 'in_transit' || transfer.status === 'completed'"
+                                    [class.bi-circle]="transfer.status !== 'in_transit' && transfer.status !== 'completed'"
+                                    class="block mb-1"></i>
+                                Shipped
+                            </span>
+                            <span class="text-center">
+                                <i class="bi" [class.bi-check-circle-fill]="transfer.status === 'completed'"
+                                    [class.bi-circle]="transfer.status !== 'completed'" class="block mb-1"></i>
+                                Received
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (transfer.shipment) {
+                    <div class="mt-4 p-4 bg-gray-50 rounded-xl text-center">
+                        <p class="text-sm text-gray-600 mb-1">
+                            <i class="bi bi-truck mr-2"></i>{{ transfer.shipment.carrier }}
+                        </p>
+                        <p class="font-mono font-semibold text-gray-900">{{ transfer.shipment.trackingNumber }}</p>
+                        @if (transfer.shipment.estimatedArrival) {
+                        <p class="text-xs text-gray-500 mt-1">
+                            Est. arrival: {{ formatDate(transfer.shipment.estimatedArrival) }}
+                        </p>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <!-- Destination -->
+                <div class="flex-1 text-right">
+                    <div class="flex items-center gap-4 mb-4 justify-end">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">To</p>
+                            <h3 class="text-lg font-bold text-gray-900">{{ transfer.destinationWarehouse.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ transfer.destinationWarehouse.location }}</p>
+                        </div>
+                        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center">
+                            <i class="bi bi-shop text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p>{{ transfer.destinationWarehouse.contactName }} <i class="bi bi-person ml-2"></i></p>
+                        <p>{{ transfer.destinationWarehouse.contactPhone }} <i class="bi bi-telephone ml-2"></i></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h3 class="font-semibold text-gray-900 mb-4">Transfer Information</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Type</span>
+                        <span class="font-medium text-gray-900 capitalize">{{ transfer.type }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Reason</span>
+                        <span class="font-medium text-gray-900">{{ transfer.reason }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Requested By</span>
+                        <span class="font-medium text-gray-900">{{ transfer.requestedBy }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Required By</span>
+                        <span class="font-medium text-gray-900">{{ transfer.requiredBy ? formatDate(transfer.requiredBy)
+                            : 'N/A' }}</span>
+                    </div>
+                    @if (transfer.approvedBy) {
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Approved By</span>
+                        <span class="font-medium text-gray-900">{{ transfer.approvedBy }}</span>
+                    </div>
+                    }
+                    @if (transfer.shippedBy) {
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Shipped By</span>
+                        <span class="font-medium text-gray-900">{{ transfer.shippedBy }}</span>
+                    </div>
+                    }
+                    @if (transfer.receivedBy) {
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-500">Received By</span>
+                        <span class="font-medium text-gray-900">{{ transfer.receivedBy }}</span>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h3 class="font-semibold text-gray-900 mb-4">Shipment Details</h3>
+                @if (transfer.shipment; as shipment) {
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Carrier</span>
+                        <span class="font-medium text-gray-900">{{ shipment.carrier }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Tracking</span>
+                        <span class="font-mono font-medium text-gray-900">{{ shipment.trackingNumber }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Packages</span>
+                        <span class="font-medium text-gray-900">{{ shipment.packages }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Total Weight</span>
+                        <span class="font-medium text-gray-900">{{ formatWeight(shipment.weight) }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-gray-500">Shipping Cost</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(shipment.shippingCost) }}</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-500">Insurance</span>
+                        <span class="font-medium text-gray-900">{{ formatCurrency(shipment.insuranceValue) }}</span>
+                    </div>
+                </div>
+                } @else {
+                <p class="text-gray-500 text-center py-8">No shipment information yet.</p>
+                }
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <h3 class="font-semibold text-gray-900 mb-4">Notes</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Public Notes</p>
+                        <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{{ transfer.notes || 'No notes' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Internal Notes</p>
+                        <p class="text-sm text-gray-700 bg-yellow-50 p-3 rounded-lg">{{ transfer.internalNotes || 'No
+                            internal notes' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Items Detail -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900">Line Items ({{ transfer.lineItems.length }})</h3>
+            </div>
+            <table class="w-full">
+                <thead class="bg-gray-50/50 border-b border-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Product</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Requested</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Shipped</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Received</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @for (item of transfer.lineItems; track item.id) {
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <img [src]="item.product.image" class="w-10 h-10 rounded-lg object-cover bg-gray-100">
+                                <div>
+                                    <p class="font-medium text-gray-900 text-sm">{{ item.product.name }}</p>
+                                    <p class="text-xs text-gray-500">{{ item.product.sku }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="text-sm font-medium text-gray-900">{{ item.quantityRequested }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="text-sm font-medium"
+                                [class]="item.quantityShipped !== item.quantityRequested ? 'text-orange-600' : 'text-gray-900'">
+                                {{ item.quantityShipped }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="text-sm font-medium"
+                                [class]="item.quantityReceived !== item.quantityShipped ? 'text-red-600' : 'text-green-600'">
+                                {{ item.quantityReceived }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded-lg text-xs font-medium"
+                                [class]="getLineItemStatusColor(item.status)">
+                                {{ item.status | titlecase }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
+    <!-- RECEIVE VIEW -->
+    @if (activeView() === 'receive' && selectedTransfer(); as transfer) {
+    <div class="space-y-6 animate-fade-in">
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-4 mb-6">
+                <button (click)="goToList()"
+                    class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="bi bi-arrow-left text-xl"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Receive Transfer</h2>
+                    <p class="text-gray-500">{{ transfer.transferNumber }} from {{ transfer.sourceWarehouse.name }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                @for (item of transfer.lineItems; track item.id) {
+                <div class="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-indigo-300 transition-colors"
+                    [class.bg-green-50]="item.status === 'received'" [class.bg-red-50]="item.status === 'damaged'">
+                    <div class="flex items-center gap-4">
+                        <img [src]="item.product.image" class="w-16 h-16 rounded-lg object-cover bg-gray-100">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ item.product.name }}</p>
+                            <p class="text-sm text-gray-500">{{ item.product.sku }}</p>
+                            <p class="text-sm text-gray-600 mt-1">Expected: {{ item.quantityShipped }} units</p>
+                        </div>
+                    </div>
+
+                    @if (item.status === 'pending' || item.status === 'shipped') {
+                    <button (click)="receiveLineItem(item)"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all">
+                        Receive
+                    </button>
+                    } @else {
+                    <div class="text-right">
+                        <span class="px-3 py-1 rounded-lg text-sm font-medium"
+                            [class]="getLineItemStatusColor(item.status)">
+                            {{ item.status | titlecase }}
+                        </span>
+                        <p class="text-sm text-gray-600 mt-1">Received: {{ item.quantityReceived }}</p>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button (click)="goToList()"
+                    class="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+</div>
+</div>
+
+<!-- Line Item Modal -->
+@if (showLineItemModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">
+                {{ editingLineItem() ? 'Edit Item' : 'Add Product' }}
+            </h2>
+            <button (click)="showLineItemModal.set(false)"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form [formGroup]="lineItemForm" class="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Product *</label>
+                <select formControlName="inventoryItemId"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    <option value="">Select product...</option>
+                    @for (item of availableSourceInventory(); track item.id) {
+                    <option [value]="item.id">
+                        {{ item.product.name }} ({{ item.product.sku }}) - Available: {{ item.availableQty }} @ {{
+                        item.binLocation }}
+                    </option>
+                    }
+                </select>
+            </div>
+
+            @if (lineItemForm.get('inventoryItemId')?.value) {
+            <div class="p-4 bg-gray-50 rounded-xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <img [src]="getAvailableSourceInventoryItem()?.product?.image" class="w-12 h-12 rounded-lg object-cover bg-gray-100">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ getAvailableSourceInventoryItem()?.product?.name }}</p>
+                        <p class="text-sm text-gray-500">{{ getAvailableSourceInventoryItem()?.product?.sku }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Available:</span>
+                        <span class="ml-2 font-medium text-gray-900">{{ getAvailableSourceInventoryItem()?.availableQty }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Unit Cost:</span>
+                        <span class="ml-2 font-medium text-gray-900">{{ formatCurrency(getAvailableSourceInventoryItem()?.product?.unitCost
+                            || 0) }}</span>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity to Transfer *</label>
+                <input type="number" formControlName="quantity" min="1"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-lg text-center">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Destination Bin (Optional)</label>
+                <input type="text" formControlName="destinationBin" placeholder="e.g., A-01-01"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <textarea formControlName="notes" rows="2" placeholder="Optional notes..."
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+            </div>
+        </form>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="showLineItemModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="saveLineItem()" [disabled]="lineItemForm.invalid"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                {{ editingLineItem() ? 'Update' : 'Add' }} Item
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Ship Modal -->
+@if (showShipModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">Mark as Shipped</h2>
+            <button (click)="showShipModal.set(false)"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form [formGroup]="shipmentForm" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Carrier *</label>
+                <div class="grid grid-cols-3 gap-2">
+                    @for (carrier of carriers(); track carrier.id) {
+                    <button type="button" (click)="shipmentForm.patchValue({ carrier: carrier.name })"
+                        class="px-3 py-3 rounded-xl border-2 text-sm font-medium transition-all flex flex-col items-center gap-1"
+                        [class.border-indigo-600]="shipmentForm.get('carrier')?.value === carrier.name"
+                        [class.bg-indigo-50]="shipmentForm.get('carrier')?.value === carrier.name"
+                        [class.text-indigo-700]="shipmentForm.get('carrier')?.value === carrier.name"
+                        [class.border-gray-200]="shipmentForm.get('carrier')?.value !== carrier.name"
+                        [class.text-gray-700]="shipmentForm.get('carrier')?.value !== carrier.name">
+                        <i class="bi" [class]="carrier.icon"></i>
+                        {{ carrier.name }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tracking Number *</label>
+                <input type="text" formControlName="trackingNumber" placeholder="Enter tracking number..."
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Arrival *</label>
+                <input type="date" formControlName="estimatedArrival"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Packages</label>
+                    <input type="number" formControlName="packages" min="1"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Shipping Cost</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <input type="number" formControlName="shippingCost" min="0" step="0.01"
+                            class="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Dimensions (L × W × H in inches)</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="number" formControlName="length" placeholder="L"
+                        class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-center">
+                    <input type="number" formControlName="width" placeholder="W"
+                        class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-center">
+                    <input type="number" formControlName="height" placeholder="H"
+                        class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-center">
+                </div>
+            </div>
+        </form>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="showShipModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="confirmShipment()" [disabled]="shipmentForm.invalid"
+                class="px-6 py-2.5 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-200">
+                <i class="bi bi-truck mr-2"></i>
+                Confirm Shipment
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Receive Item Modal -->
+@if (showReceiveModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide-up">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-lg font-semibold text-gray-900">Receive Item</h2>
+            <button (click)="showReceiveModal.set(false)"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        @if (selectedLineItemForReceive(); as item) {
+        <div class="p-6">
+            <div class="flex items-center gap-4 mb-6">
+                <img [src]="item.product.image" class="w-16 h-16 rounded-lg object-cover bg-gray-100">
+                <div>
+                    <p class="font-semibold text-gray-900">{{ item.product.name }}</p>
+                    <p class="text-sm text-gray-500">{{ item.product.sku }}</p>
+                    <p class="text-sm text-gray-600 mt-1">Expected: {{ item.quantityShipped }} units</p>
+                </div>
+            </div>
+
+            <form [formGroup]="receiveForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantity Received *</label>
+                    <input type="number" formControlName="quantityReceived" min="0" [max]="item.quantityShipped"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-lg text-center">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Condition *</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" (click)="receiveForm.patchValue({ condition: 'good' })"
+                            class="px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all"
+                            [class.border-green-600]="receiveForm.get('condition')?.value === 'good'"
+                            [class.bg-green-50]="receiveForm.get('condition')?.value === 'good'"
+                            [class.text-green-700]="receiveForm.get('condition')?.value === 'good'"
+                            [class.border-gray-200]="receiveForm.get('condition')?.value !== 'good'"
+                            [class.text-gray-700]="receiveForm.get('condition')?.value !== 'good'">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            Good
+                        </button>
+                        <button type="button" (click)="receiveForm.patchValue({ condition: 'damaged' })"
+                            class="px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all"
+                            [class.border-red-600]="receiveForm.get('condition')?.value === 'damaged'"
+                            [class.bg-red-50]="receiveForm.get('condition')?.value === 'damaged'"
+                            [class.text-red-700]="receiveForm.get('condition')?.value === 'damaged'"
+                            [class.border-gray-200]="receiveForm.get('condition')?.value !== 'damaged'"
+                            [class.text-gray-700]="receiveForm.get('condition')?.value !== 'damaged'">
+                            <i class="bi bi-exclamation-triangle mr-2"></i>
+                            Damaged
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea formControlName="notes" rows="2" placeholder="Any issues or observations..."
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+            </form>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+            <button (click)="showReceiveModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="confirmReceipt()" [disabled]="receiveForm.invalid"
+                class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200">
+                Confirm Receipt
+            </button>
+        </div>
+        }
+    </div>
+</div>
+}
+
+<!-- Approval Modal -->
+@if (showApproveModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-check-circle text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Approve Transfer?</h3>
+        <p class="text-gray-500 mb-6">
+            Approve transfer <strong>{{ selectedTransfer()?.transferNumber }}</strong> from
+            {{ selectedTransfer()?.sourceWarehouse?.name }} to {{ selectedTransfer()?.destinationWarehouse?.name }}?
+        </p>
+        <div class="flex gap-3 justify-center">
+            <button (click)="showApproveModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Cancel
+            </button>
+            <button (click)="confirmApproval()"
+                class="px-6 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-200">
+                Approve Transfer
+            </button>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Cancel Modal -->
+@if (showCancelModal()) {
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-up text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="bi bi-x-octagon text-red-600 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Cancel Transfer?</h3>
+        <p class="text-gray-500 mb-6">
+            Are you sure you want to cancel <strong>{{ selectedTransfer()?.transferNumber }}</strong>?
+            This action cannot be undone.
+        </p>
+        <div class="flex gap-3 justify-center">
+            <button (click)="showCancelModal.set(false)"
+                class="px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
+                Keep Transfer
+            </button>
+            <button (click)="confirmCancel()"
+                class="px-6 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200">
+                Cancel Transfer
+            </button>
+        </div>
+    </div>
+</div>
+}
